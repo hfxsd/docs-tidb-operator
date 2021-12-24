@@ -180,7 +180,7 @@ All the instances except ACK mandatory workers are deployed across availability 
           ...
           tiflash:
             baseImage: pingcap/tiflash
-            maxFailoverCount: 3
+            maxFailoverCount: 0
             nodeSelector:
               dedicated: TIDB_CLUSTER_NAME-tiflash
             replicas: 1
@@ -281,7 +281,7 @@ ssh -i credentials/${cluster_name}-key.pem root@${bastion_ip}
 {{< copyable "shell-regular" >}}
 
 ```shell
-mysql -h ${tidb_lb_ip} -P 4000 -u root
+mysql --comments -h ${tidb_lb_ip} -P 4000 -u root
 ```
 
 `tidb_lb_ip` is the LoadBalancer IP of the TiDB service.
