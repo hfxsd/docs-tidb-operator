@@ -54,7 +54,8 @@ kind create cluster
 
 <details>
 <summary>点击查看期望输出</summary>
-<pre><code>
+
+```
 Creating cluster "kind" ...
 ✓ Ensuring node image (kindest/node:v1.18.2) 🖼
 ✓ Preparing nodes 📦
@@ -66,7 +67,8 @@ Set kubectl context to "kind-kind"
 You can now use your cluster with:
 kubectl cluster-info --context kind-kind
 Thanks for using kind! 😊
-</code></pre>
+```
+
 </details>
 
 检查集群是否创建成功：
@@ -79,12 +81,14 @@ kubectl cluster-info
 
 <details>
 <summary>点击查看期望输出</summary>
-<pre><code>
+
+```
 Kubernetes master is running at https://127.0.0.1:51026
 KubeDNS is running at https://127.0.0.1:51026/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
-</code></pre>
+```
+
 </details>
 
 Kubernetes 集群部署完成，现在就可以开始部署 TiDB Operator 了！
@@ -476,7 +480,7 @@ mysql --comments -h 127.0.0.1 -P 4000 -u root
 ```
 Welcome to the MariaDB monitor.  Commands end with ; or \g.
 Your MySQL connection id is 178505
-Server version: 5.7.25-TiDB-v5.2.1 TiDB Server (Apache License 2.0) Community Edition, MySQL 5.7 compatible
+Server version: 5.7.25-TiDB-v5.3.0 TiDB Server (Apache License 2.0) Community Edition, MySQL 5.7 compatible
 
 Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
 
@@ -490,7 +494,7 @@ MySQL [(none)]>
 以下是一些可以用来验证集群功能的命令。
 
 <details>
-<summary>创建 `hello_world` 表</summary>
+<summary>创建 <code>hello_world</code> 表</summary>
 
 ```sql
 mysql> create table hello_world (id int unsigned not null auto_increment primary key, v varchar(32));
@@ -524,11 +528,11 @@ mysql> select * from information_schema.tikv_region_status where db_name=databas
 ```sql
 mysql> select tidb_version()\G
 *************************** 1. row ***************************
-         tidb_version(): Release Version: v5.2.1
+         tidb_version(): Release Version: v5.3.0
                 Edition: Community
-        Git Commit Hash: cd8fb24c5f7ebd9d479ed228bb41848bd5e97445
-             Git Branch: heads/refs/tags/v5.2.1
-         UTC Build Time: 2021-09-08 02:32:56
+        Git Commit Hash: 4a1b2e9fe5b5afb1068c56de47adb07098d768d6
+             Git Branch: heads/refs/tags/v5.3.0
+         UTC Build Time: 2021-11-24 13:32:39
               GoVersion: go1.16.4
            Race Enabled: false
        TiKV Min Version: v3.0.0-60965b006877ca7234adaced7890d7b029ed1306
@@ -570,7 +574,8 @@ mysql> select * from information_schema.tikv_store_status\G
 
 <details>
 <summary>查询 TiDB 集群基本信息</summary>
-该命令需要 TiDB 4.0 或以上版本，如果你部署的 TiDB 版本不支持该命令，请[升级集群](#第-5-步升级-tidb-集群)。
+
+该命令需要 TiDB 4.0 或以上版本，如果你部署的 TiDB 版本不支持该命令，请先[升级 TiDB 集群](#第-5-步升级-tidb-集群)
 
 ```sql
 mysql> select * from information_schema.cluster_info\G
