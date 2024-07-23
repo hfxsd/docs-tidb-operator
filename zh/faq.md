@@ -44,7 +44,7 @@ spec:
 
 2. 修改 TiDB 支持新的时区
 
-    参考[时区支持](https://pingcap.com/docs-cn/stable/configure-time-zone/)，修改 TiDB 服务时区配置。
+    参考[时区支持](https://docs.pingcap.com/zh/tidb/stable/configure-time-zone)，修改 TiDB 服务时区配置。
 
 ## TiDB 相关组件可以配置 HPA 或 VPA 么？
 
@@ -71,7 +71,7 @@ TiDB 集群目前还不支持 HPA（Horizontal Pod Autoscaling，自动水平扩
 
 TiDB Operator 尚不支持自动编排 TiSpark。
 
-假如要为 TiDB in Kubernetes 添加 TiSpark 组件，你需要在**同一个** Kubernetes 集群中自行维护 Spark，确保 Spark 能够访问到 PD 和 TiKV 实例的 IP 与端口，并为 Spark 安装 TiSpark 插件，TiSpark 插件的安装方式可以参考 [TiSpark](https://pingcap.com/docs-cn/stable/tispark-overview/#已有-spark-集群的部署方式)。
+假如要为 TiDB on Kubernetes 添加 TiSpark 组件，你需要在**同一个** Kubernetes 集群中自行维护 Spark，确保 Spark 能够访问到 PD 和 TiKV 实例的 IP 与端口，并为 Spark 安装 TiSpark 插件，TiSpark 插件的安装方式可以参考 [TiSpark](https://docs.pingcap.com/zh/tidb/stable/tispark-overview#在已有-spark-集群上部署-tispark)。
 
 在 Kubernetes 上维护 Spark 可以参考 Spark 的官方文档：[Spark on Kubernetes](http://spark.apache.org/docs/latest/running-on-kubernetes.html)。
 
@@ -135,7 +135,7 @@ PD 和 TiKV 使用 [Raft 一致性算法](https://raft.github.io/)将存储的�
 
 * 升级中
 * 缩扩容中
-* PD、TiDB、TiKV、TiFlash 任一 Pod 状态不是 Ready
+* PD、TiDB、TiKV、TiFlash、TiProxy 任一 Pod 状态不是 Ready
 
 要判断 TiDB 集群是否真正不可用，你可以尝试连接 TiDB。如果无法连接成功，说明 TiDB 集群真正不可用。
 

@@ -9,7 +9,7 @@ This document describes a method for replacing and upgrading nodes without downt
 
 This document uses Amazon EKS as an example and describes how to create a new node group and migrate a TiDB cluster to the new node group using a rolling restart. You can use this method to replace a node group with more compute resources for TiKV or TiDB and upgrade EKS.
 
-For other cloud platforms, refer to [GCP GKE](deploy-on-gcp-gke.md), [Azure AKS](deploy-on-azure-aks.md), or [Alibaba Cloud ACK](deploy-on-alibaba-cloud.md) and operate on the node group.
+For other cloud platforms, refer to [Google Cloud GKE](deploy-on-gcp-gke.md) or [Azure AKS](deploy-on-azure-aks.md) and operate on the node group.
 
 ## Prerequisites
 
@@ -106,7 +106,7 @@ kubectl cordon -l alpha.eksctl.io/nodegroup-name=${origin_nodegroup2}
 
 ## Step 3: Rolling restart the TiDB cluster
 
-Refer to [Restart a TiDB Cluster in Kubernetes](restart-a-tidb-cluster.md#perform-a-graceful-rolling-restart-to-all-pods-in-a-component) and perform a rolling restart on the TiDB cluster.
+Refer to [Restart a TiDB Cluster on Kubernetes](restart-a-tidb-cluster.md#perform-a-graceful-rolling-restart-to-all-pods-in-a-component) and perform a rolling restart on the TiDB cluster.
 
 ## Step 4: Delete the original node groups
 

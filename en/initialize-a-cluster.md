@@ -1,12 +1,12 @@
 ---
-title: Initialize a TiDB Cluster in Kubernetes
+title: Initialize a TiDB Cluster on Kubernetes
 summary: Learn how to initialize a TiDB cluster in K8s.
 aliases: ['/docs/tidb-in-kubernetes/dev/initialize-a-cluster/','/dev/tidb-in-kubernetes/initialize-cluster/']
 ---
 
-# Initialize a TiDB Cluster in Kubernetes
+# Initialize a TiDB Cluster on Kubernetes
 
-This document describes how to initialize a TiDB cluster in Kubernetes (K8s), specifically, how to configure the initial account and password and how to initialize the database by executing SQL statements automatically in batch.
+This document describes how to initialize a TiDB cluster on Kubernetes (K8s), specifically, how to configure the initial account and password and how to initialize the database by executing SQL statements automatically in batch.
 
 > **Note:**
 >
@@ -15,7 +15,7 @@ This document describes how to initialize a TiDB cluster in Kubernetes (K8s), sp
 
 ## Configure TidbInitializer
 
-Refer to [TidbInitializer configuration example](https://github.com/pingcap/tidb-operator/blob/master/manifests/initializer/tidb-initializer.yaml), [API documentation](https://github.com/pingcap/tidb-operator/blob/master/docs/api-references/docs.md), and the following steps to complete TidbInitializer Custom Resource (CR), and save it to the `${cluster_name}/tidb-initializer.yaml` file. When referring to the TidbInitializer configuration example and API documentation, you need to switch the branch to the TiDB Operator version currently in use.
+Refer to [TidbInitializer configuration example](https://github.com/pingcap/tidb-operator/blob/v1.6.0/manifests/initializer/tidb-initializer.yaml), [API documentation](https://github.com/pingcap/tidb-operator/blob/v1.6.0/docs/api-references/docs.md), and the following steps to complete TidbInitializer Custom Resource (CR), and save it to the `${cluster_name}/tidb-initializer.yaml` file. When referring to the TidbInitializer configuration example and API documentation, you need to switch the branch to the TiDB Operator version currently in use.
 
 ### Set the cluster namespace and name
 

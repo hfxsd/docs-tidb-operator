@@ -6,17 +6,11 @@ aliases: ['/docs/tidb-in-kubernetes/dev/restore-data-using-tidb-lightning/']
 
 # Import Data
 
-This document describes how to import data into a TiDB cluster in Kubernetes using [TiDB Lightning](https://docs.pingcap.com/tidb/stable/tidb-lightning-overview).
+This document describes how to import data into a TiDB cluster on Kubernetes using [TiDB Lightning](https://docs.pingcap.com/tidb/stable/tidb-lightning-overview).
 
-TiDB Lightning contains two components: tidb-lightning and tikv-importer. In Kubernetes, the tikv-importer is inside the separate Helm chart of the TiDB cluster. And tikv-importer is deployed as a `StatefulSet` with `replicas=1` while tidb-lightning is in a separate Helm chart and deployed as a `Job`.
+In Kubernetes, the tidb-lightning is in a separate Helm chart and deployed as a `Job`.
 
-TiDB Lightning supports three backends: `Importer-backend`, `Local-backend`, and `TiDB-backend`. For the differences of these backends and how to choose backends, see [TiDB Lightning Backends](https://docs.pingcap.com/tidb/stable/tidb-lightning-backends).
-
-- For `Importer-backend`, both tikv-importer and tidb-lightning need to be deployed.
-
-    > **Note:**
-    >
-    > `Importer-backend` is deprecated in TiDB 5.3 version or later versions. If you must use `Importer-backend`, refer to [the documentation of v1.2](https://docs.pingcap.com/tidb-in-kubernetes/v1.2/restore-data-using-tidb-lightning#deploy-tikv-importer).
+TiDB Lightning supports two backends: `Local-backend`, and `TiDB-backend`. For the differences of these backends and how to choose backends, see [TiDB Lightning Backends](https://docs.pingcap.com/tidb/stable/tidb-lightning-backends).
 
 - For `Local-backend`, only tidb-lightning needs to be deployed.
 
@@ -57,9 +51,9 @@ Starting from v1.1.10, the tidb-lightning Helm chart saves the [TiDB Lightning c
 
 For versions earlier than v1.1.10, you can modify `config` in `values.yaml` to save the checkpoint information in the target TiDB cluster, other MySQL-compatible databases or a shared storage directory. For more information, refer to [TiDB Lightning checkpoint](https://docs.pingcap.com/tidb/stable/tidb-lightning-checkpoints).
 
-#### Configure TLS 
+#### Configure TLS
 
-If TLS between components has been enabled on the target TiDB cluster (`spec.tlsCluster.enabled: true`), refer to [Generate certificates for components of the TiDB cluster](enable-tls-between-components.md#generate-certificates-for-components-of-the-tidb-cluster) to genereate a server-side certificate for TiDB Lightning, and configure `tlsCluster.enabled: true` in `values.yaml` to enable TLS between components.
+If TLS between components has been enabled on the target TiDB cluster (`spec.tlsCluster.enabled: true`), refer to [Generate certificates for components of the TiDB cluster](enable-tls-between-components.md#generate-certificates-for-components-of-the-tidb-cluster) to generate a server-side certificate for TiDB Lightning, and configure `tlsCluster.enabled: true` in `values.yaml` to enable TLS between components.
 
 If the target TiDB cluster has enabled TLS for the MySQL client (`spec.tidb.tlsClient.enabled: true`), and the corresponding client-side certificate is configured (the Kubernetes Secret object is `${cluster_name}-tidb-client-secret`), you can configure `tlsClient.enabled: true` in `values.yaml` to enable TiDB Lightning to connect to the TiDB server using TLS.
 
@@ -265,14 +259,14 @@ The method of deploying TiDB Lightning varies with different methods of granting
 
     2. Create the IAM role:
 
-        [Create an IAM role](https://docs.aws.amazon.com/eks/latest/userguide/create-service-account-iam-policy-and-role.html). Grant the `AmazonS3FullAccess` permission to the role, and edit `Trust relationships` of the role.
+        [Create an IAM role](https://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html). Grant the `AmazonS3FullAccess` permission to the role, and edit `Trust relationships` of the role.
 
     3. Associate IAM with the ServiceAccount resources:
 
         {{< copyable "shell-regular" >}}
 
         ```shell
-        kubectl annotate sa ${servieaccount} -n eks.amazonaws.com/role-arn=arn:aws:iam::123456789012:role/user
+        kubectl annotate sa ${servieaccount} -n ${namespace} eks.amazonaws.com/role-arn=arn:aws:iam::123456789012:role/user
         ```
 
     4. Deploy TiDB Lightning:

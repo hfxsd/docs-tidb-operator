@@ -1,6 +1,6 @@
 ---
-title: Access the TiDB Cluster in Kubernetes
-summary: Learn how to access the TiDB cluster in Kubernetes.
+title: Access the TiDB Cluster on Kubernetes
+summary: Learn how to access the TiDB cluster on Kubernetes.
 aliases: ['/docs/tidb-in-kubernetes/dev/access-tidb/']
 ---
 
@@ -8,7 +8,7 @@ aliases: ['/docs/tidb-in-kubernetes/dev/access-tidb/']
 
 This document describes how to access the TiDB cluster.
 
-You can configure Service with different types according to the scenarios, such as `ClusterIP`, `NodePort`, `LoadBalancer`, etc., and use different access methods for different types. 
+You can configure Service with different types according to the scenarios, such as `ClusterIP`, `NodePort`, `LoadBalancer`, etc., and use different access methods for different types.
 
 You can obtain TiDB Service information by running the following command:
 
@@ -64,8 +64,8 @@ To check you can access TiDB services by using the IP of what nodes, see the fol
 
 ## LoadBalancer
 
-If the TiDB cluster runs in an environment with LoadBalancer, such as on GCP or AWS, it is recommended to use the LoadBalancer feature of these cloud platforms by setting `tidb.service.type=LoadBalancer`.
+If the TiDB cluster runs in an environment with LoadBalancer, such as on Google Cloud or AWS, it is recommended to use the LoadBalancer feature of these cloud platforms by setting `tidb.service.type=LoadBalancer`.
 
-To access TiDB Service through LoadBalancer, refer to [EKS](deploy-on-aws-eks.md#install-the-mysql-client-and-connect), [GKE](deploy-on-gcp-gke.md#install-the-mysql-client-and-connect) and [ACK](deploy-on-alibaba-cloud.md#access-the-database).
+To access TiDB Service through LoadBalancer, refer to [EKS](deploy-on-aws-eks.md#install-the-mysql-client-and-connect) and [GKE](deploy-on-gcp-gke.md#install-the-mysql-client-and-connect).
 
 See [Kubernetes Service Documentation](https://kubernetes.io/docs/concepts/services-networking/service/) to know more about the features of Service and what LoadBalancer in the cloud platform supports.

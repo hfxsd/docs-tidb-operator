@@ -50,12 +50,12 @@ GRANT
 
 ### 第 1 步：Ad-hoc 全量备份环境准备
 
-1. 执行以下命令，根据 [backup-rbac.yaml](https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/backup/backup-rbac.yaml) 在 `tidb-cluster` 命名空间创建基于角色的访问控制 (RBAC) 资源。
+1. 执行以下命令，根据 [backup-rbac.yaml](https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/backup/backup-rbac.yaml) 在 `tidb-cluster` 命名空间创建基于角色的访问控制 (RBAC) 资源。
 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/backup/backup-rbac.yaml -n tidb-cluster
+    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/backup/backup-rbac.yaml -n tidb-cluster
     ```
 
 2. 远程存储访问授权。
@@ -262,7 +262,7 @@ GRANT
 
 上述示例将 TiDB 集群的数据全量导出备份到 Amazon S3 和 Ceph 上。Amazon S3 的 `acl`、`endpoint`、`storageClass` 配置项均可以省略。其余非 Amazon S3 的但是兼容 S3 的存储均可使用和 Amazon S3 类似的配置。可参考上面例子中 Ceph 的配置，省略不需要配置的字段。更多兼容 S3 的存储相关配置参考 [S3 存储字段介绍](backup-restore-cr.md#s3-存储字段介绍)。
 
-以上示例中，`.spec.dumpling` 表示 Dumpling 相关的配置，可以在 `options` 字段指定 Dumpling 的运行参数，详情见 [Dumpling 使用文档](https://docs.pingcap.com/zh/tidb/dev/dumpling-overview#dumpling-主要参数表)；默认情况下该字段可以不用配置。当不指定 Dumpling 的配置时，`options` 字段的默认值如下：
+以上示例中，`.spec.dumpling` 表示 Dumpling 相关的配置，可以在 `options` 字段指定 Dumpling 的运行参数，详情见 [Dumpling 使用文档](https://docs.pingcap.com/zh/tidb/stable/dumpling-overview#dumpling-主要选项表)；默认情况下该字段可以不用配置。当不指定 Dumpling 的配置时，`options` 字段的默认值如下：
 
 ```
 options:

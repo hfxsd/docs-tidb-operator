@@ -6,16 +6,19 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/tidb-operator-overview/']
 
 # TiDB Operator 简介
 
-[TiDB Operator](https://github.com/pingcap/tidb-operator) 是 Kubernetes 上的 TiDB 集群自动运维系统，提供包括部署、升级、扩缩容、备份恢复、配置变更的 TiDB 全生命周期管理。借助 TiDB Operator，TiDB 可以无缝运行在公有云或私有部署的 Kubernetes 集群上。
+[TiDB Operator](https://github.com/pingcap/tidb-operator) 是 Kubernetes 上的 TiDB 集群自动运维系统，提供包括部署、升级、扩缩容、备份恢复、配置变更的 TiDB 全生命周期管理。借助 TiDB Operator，TiDB 可以无缝运行在公有云或自托管的 Kubernetes 集群上。
 
 TiDB Operator 与适用的 TiDB 版本的对应关系如下：
 
 | TiDB 版本 | 适用的 TiDB Operator 版本 |
 |:---|:---|
 | dev               | dev                 |
-| TiDB >= 5.4       | 1.3                 |
-| 5.1 <= TiDB < 5.4 | 1.3（推荐），1.2      |
-| 3.0 <= TiDB < 5.1 | 1.3（推荐），1.2，1.1 |
+| TiDB >= 8.0       | 1.6（推荐），1.5 |
+| 7.1 <= TiDB < 8.0 | 1.5（推荐），1.4 |
+| 6.5 <= TiDB < 7.1 | 1.5, 1.4（推荐），1.3     |
+| 5.4 <= TiDB < 6.5 | 1.4, 1.3（推荐）   |
+| 5.1 <= TiDB < 5.4 | 1.4，1.3（推荐），1.2      |
+| 3.0 <= TiDB < 5.1 | 1.4，1.3（推荐），1.2，1.1 |
 | 2.1 <= TiDB < v3.0| 1.0（停止维护）       |
 
 ## 使用 TiDB Operator 管理 TiDB 集群
@@ -32,10 +35,9 @@ TiDB Operator 提供了多种方式来部署 Kubernetes 上的 TiDB 集群：
 
     - 在公有云上部署生产可用的 TiDB 集群并进行后续的运维管理；
 
-        - [Deploy TiDB on AWS EKS](deploy-on-aws-eks.md)
-        - [Deploy TiDB on GCP GKE (beta)](deploy-on-gcp-gke.md)
-        - [Deploy TiDB on Azure AKS](deploy-on-azure-aks.md)
-        - [Deploy TiDB on Alibaba Cloud ACK](deploy-on-alibaba-cloud.md)
+        - [在 AWS EKS 上部署 TiDB 集群](deploy-on-aws-eks.md)
+        - [在 Google Cloud GKE 上部署 TiDB 集群](deploy-on-gcp-gke.md)
+        - [在 Azure AKS 上部署 TiDB 集群](deploy-on-azure-aks.md)
 
     - 在自托管的 Kubernetes 集群中部署 TiDB 集群：
 
@@ -61,9 +63,6 @@ TiDB Operator 提供了多种方式来部署 Kubernetes 上的 TiDB 集群：
 + 查阅 [Kubernetes 上的 TiDB FAQ](faq.md) 寻找是否存在现成的解决办法；
 + 参考 [Kubernetes 上的 TiDB 故障诊断](tips.md)解决故障。
 
-Kubernetes 上的 TiDB 提供了专用的命令行工具 `tkctl` 用于集群管理和辅助诊断，同时，在 Kubernetes 上，TiDB 的部分生态工具的使用方法也有所不同，你可以：
-
-+ 参考 [`tkctl` 使用指南](use-tkctl.md) 来使用 `tkctl`；
-+ 参考 [Kubernetes 上的 TiDB 相关工具使用指南](tidb-toolkit.md)来了解 TiDB 生态工具在 Kubernetes 上的使用方法。
+在 Kubernetes 上，TiDB 的部分生态工具的使用方法也有所不同，你可以参考 [Kubernetes 上的 TiDB 相关工具使用指南](tidb-toolkit.md)来了解 TiDB 生态工具在 Kubernetes 上的使用方法。
 
 最后，当 TiDB Operator 发布新版本时，你可以参考[升级 TiDB Operator](upgrade-tidb-operator.md) 进行版本更新。

@@ -1,13 +1,13 @@
 ---
-title: Deploy TiCDC in Kubernetes
-summary: Learn how to deploy TiCDC in Kubernetes.
+title: Deploy TiCDC on Kubernetes
+summary: Learn how to deploy TiCDC on Kubernetes.
 draft: false
 aliases: ['/docs/tidb-in-kubernetes/dev/deploy-ticdc/']
 ---
 
-# Deploy TiCDC in Kubernetes
+# Deploy TiCDC on Kubernetes
 
-[TiCDC](https://docs.pingcap.com/tidb/stable/ticdc-overview) is a tool for replicating the incremental data of TiDB. This document describes how to deploy TiCDC in Kubernetes using TiDB Operator.
+[TiCDC](https://docs.pingcap.com/tidb/stable/ticdc-overview) is a tool for replicating the incremental data of TiDB. This document describes how to deploy TiCDC on Kubernetes using TiDB Operator.
 
 You can deploy TiCDC when deploying a new TiDB cluster, or add the TiCDC component to an existing TiDB cluster.
 
@@ -17,7 +17,7 @@ TiDB Operator is [deployed](deploy-tidb-operator.md).
 
 ## Fresh TiCDC deployment
 
-To deploy TiCDC when deploying the TiDB cluster, refer to [Deploy TiDB in General Kubernetes](deploy-on-general-kubernetes.md).
+To deploy TiCDC when deploying the TiDB cluster, refer to [Deploy TiDB on General Kubernetes](deploy-on-general-kubernetes.md).
 
 ## Add TiCDC to an existing TiDB cluster
 
@@ -50,12 +50,13 @@ To deploy TiCDC when deploying the TiDB cluster, refer to [Deploy TiDB in Genera
     kubectl exec -it ${pod_name} -n ${namespace} -- sh
     ```
 
-5. [Manage the cluster and data replication tasks](https://pingcap.com/docs/stable/ticdc/manage-ticdc/#use-cdc-cli-to-manage-cluster-status-and-data-replication-task) by using `cdc cli`.
+5. [Manage the cluster and data replication tasks](https://docs.pingcap.com/tidb/stable/manage-ticdc#use-cdc-cli-to-manage-cluster-status-and-data-replication-task) by using `cdc cli`.
 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    /cdc cli capture list --pd=http://${cluster_name}-pd:2379
+    # The default port for TiCDC server deployed through TiDB operator is 8301
+    /cdc cli capture list --server=http://127.0.0.1:8301   
     ```
 
     ```shell
@@ -85,7 +86,7 @@ To deploy TiCDC when deploying the TiDB cluster, refer to [Deploy TiDB in Genera
     {{< copyable "shell-regular" >}}
 
     ```shell
-    /cdc cli capture list --pd=https://${cluster_name}-pd:2379 --ca=/var/lib/cluster-client-tls/ca.crt --cert=/var/lib/cluster-client-tls/tls.crt --key=/var/lib/cluster-client-tls/tls.key
+    /cdc cli capture list --server=http://127.0.0.1:8301 --ca=/var/lib/cluster-client-tls/ca.crt --cert=/var/lib/cluster-client-tls/tls.crt --key=/var/lib/cluster-client-tls/tls.key
     ```
 
     If the server does not have an external network, refer to [deploy TiDB cluster](deploy-on-general-kubernetes.md#deploy-the-tidb-cluster) to download the required Docker image on the machine with an external network and upload it to the server.

@@ -6,7 +6,7 @@ aliases: ['/docs/tidb-in-kubernetes/dev/backup-to-gcs/']
 
 # Back up Data to GCS Using Dumpling
 
-This document describes how to back up the data of the TiDB cluster in Kubernetes to [Google Cloud Storage (GCS)](https://cloud.google.com/storage/docs/). "Backup" in this document refers to full backup (ad-hoc full backup and scheduled full backup).
+This document describes how to back up the data of the TiDB cluster on Kubernetes to [Google Cloud Storage (GCS)](https://cloud.google.com/storage/docs/). "Backup" in this document refers to full backup (ad-hoc full backup and scheduled full backup).
 
 The backup method described in this document is implemented using CustomResourceDefinition (CRD) in TiDB Operator v1.1 or later versions. [Dumpling](https://docs.pingcap.com/tidb/stable/export-or-backup-using-dumpling) is used to get the logic backup of the TiDB cluster, and then this backup data is sent to the remote GCS.
 
@@ -38,7 +38,7 @@ To better explain how to perform the backup operation, this document shows an ex
 
 ### Step 1: Prepare for ad-hoc full backup
 
-1. Download [backup-rbac.yaml](https://github.com/pingcap/tidb-operator/blob/master/manifests/backup/backup-rbac.yaml) and execute the following command to create the role-based access control (RBAC) resources in the `test1` namespace:
+1. Download [backup-rbac.yaml](https://github.com/pingcap/tidb-operator/blob/v1.6.0/manifests/backup/backup-rbac.yaml) and execute the following command to create the role-based access control (RBAC) resources in the `test1` namespace:
 
     {{< copyable "shell-regular" >}}
 

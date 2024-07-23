@@ -30,20 +30,24 @@ summary: 详细介绍在使用 TiDB Operator 部署的集群上如何安装、�
 
 Diag 部署前，请确认以下软件需求：
 
-* Kubernetes v1.12 或者更高版本
+* Kubernetes v1.24 或者更高版本
 * [TiDB Operator](tidb-operator-overview.md)
 * [PersistentVolume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
-* [RBAC](https://kubernetes.io/docs/admin/authorization/rbac)
+* [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
 * [Helm 3](https://helm.sh)
 
 #### 安装 Helm
 
 参考[使用 Helm](tidb-toolkit.md#使用-helm) 文档安装 Helm 并配置 PingCAP 维护的 chart 仓库 `https://charts.pingcap.org/`。
 
+> **注意：**
+>
+> `${chart_version}` 在后续文档中代表 chart 版本，例如 `v1.3.1`，可以通过 `helm search repo -l diag` 查看当前支持的版本。
+
 ```shell
 helm search repo diag
 NAME          CHART VERSION  APP VERSION  DESCRIPTION
-pingcap/diag  v0.9.0         v0.9.0       Clinic Diag Helm chart for Kubernetes
+pingcap/diag  v1.3.1         v1.3.1       Clinic Diag Helm chart for Kubernetes
 ```
 
 #### 检查部署用户的权限
@@ -111,13 +115,13 @@ Access Token（以下简称为 Token）用于 Diag 上传数据时的用户认�
     <SimpleTab>
     <div label="Clinic Server 中国区">
 
-    登录 [Clinic Server 中国区](https://clinic.pingcap.com.cn)，选择 **Sign in with AskTUG** 进入 TiDB 社区 AskTUG 的登录界面。如果你尚未注册 AskTUG 帐号，可以在该界面进行注册。
+    登录 [Clinic Server 中国区](https://clinic.pingcap.com.cn)，选择 **Continue with AskTUG** 进入 TiDB 社区 AskTUG 的登录界面。如果你尚未注册 AskTUG 帐号，可以在该界面进行注册。
 
     </div>
 
     <div label="Clinic Server 美国区">
 
-    登录 [Clinic Server 美国区](https://clinic.pingcap.com)，选择 **Sign in with TiDB Account** 进入 TiDB Cloud Account 的登录界面。如果你尚未注册 TiDB Cloud 帐号，可以在该界面进行注册。
+    登录 [Clinic Server 美国区](https://clinic.pingcap.com)，选择 **Continue with TiDB Account** 进入 TiDB Cloud Account 的登录界面。如果你尚未注册 TiDB Cloud 帐号，可以在该界面进行注册。
 
     > **注意：**
     >
@@ -157,7 +161,7 @@ Access Token（以下简称为 Token）用于 Diag 上传数据时的用户认�
 ```shell
 # namespace：和 TiDB Operator 处于同一 namespace 中
 # diag.clinicToken：请在 "https://clinic.pingcap.com.cn" 或 "https://clinic.pingcap.com" 中登录并获取您的 Token。
-helm install --namespace tidb-admin diag-collector pingcap/diag --version v0.9.0 \
+helm install --namespace tidb-admin diag-collector pingcap/diag --version ${chart_version} \
         --set diag.clinicToken=${clinic_token}
         --set diag.clinicRegion=${clinic_region}  # CN or US
 ```
@@ -167,7 +171,7 @@ helm install --namespace tidb-admin diag-collector pingcap/diag --version v0.9.0
 > 如果访问 Docker Hub 网速较慢，可以使用阿里云上的镜像：
 >
 > ```shell
-> helm install --namespace tidb-admin diag-collector pingcap/diag --version v0.9.0 \
+> helm install --namespace tidb-admin diag-collector pingcap/diag --version ${chart_version} \
 >    --set image.diagImage=registry.cn-beijing.aliyuncs.com/tidb/diag \
 >    --set diag.clinicToken=${clinic_token}
 >    --set diag.clinicRegion=${clinic_region}
@@ -199,10 +203,6 @@ Make sure diag-collector components are running:
     mkdir -p ${HOME}/diag-collector && \
     helm inspect values pingcap/diag --version=${chart_version} > ${HOME}/diag-collector/values-diag-collector.yaml
     ```
-
-    > **注意：**
-    >
-    > `${chart_version}` 在后续文档中代表 chart 版本，例如 `v0.9.0`，可以通过 `helm search repo -l diag` 查看当前支持的版本。
 
 2. 配置 `values-diag-collector.yaml` 文件。
 
@@ -269,30 +269,30 @@ Make sure diag-collector components are running:
     通过以下命令，下载 Diag chart 文件：
 
     ```shell
-    wget http://charts.pingcap.org/diag-v0.9.0.tgz
+    wget http://charts.pingcap.org/diag-${chart_version}.tgz
     ```
 
-    将 `diag-v0.9.0.tgz` 文件拷贝到服务器上并解压到当前目录：
+    将 `diag-${chart_version}.tgz` 文件拷贝到服务器上并解压到当前目录：
 
     ```shell
-    tar zxvf diag-v0.9.0.tgz
+    tar zxvf diag-${chart_version}.tgz
     ```
 
 2. 下载 Diag 运行所需的 Docker 镜像。
 
     需要在能访问互联网的机器上将 Diag 用到的 Docker 镜像下载下来并上传到服务器上，然后使用 `docker load` 将 Docker 镜像安装到服务器上。
 
-    TiDB Operator 用到的 Docker 镜像为 `pingcap/diag:v0.9.0`，通过下面的命令将镜像下载下来：
+    TiDB Operator 用到的 Docker 镜像为 `pingcap/diag:${chart_version}`，通过下面的命令将镜像下载下来：
 
     ```shell
-    docker pull pingcap/diag:v0.9.0
-    docker save -o diag-v0.9.0.tar pingcap/diag:v0.9.0
+    docker pull pingcap/diag:${chart_version}
+    docker save -o diag-${chart_version}.tar pingcap/diag:${chart_version}
     ```
 
     接下来将这些 Docker 镜像上传到服务器上，并执行 `docker load` 将这些 Docker 镜像安装到服务器上：
 
     ```shell
-    docker load -i diag-v0.9.0.tar
+    docker load -i diag-${chart_version}.tar
     ```
 
 3. 配置 `values-diag-collector.yaml` 文件。
@@ -370,7 +370,7 @@ Make sure diag-collector components are running:
 2. 通过如下 `helm` 命令部署 Diag，从 Docker Hub 下载最新 Diag 镜像。
 
     ```shell
-    helm install --namespace tidb-cluster diag-collector pingcap/diag --version v0.9.0 \
+    helm install --namespace tidb-cluster diag-collector pingcap/diag --version ${chart_version} \
         --set diag.clinicToken=${clinic_token} \
         --set diag.clusterRoleEnabled=false  \
         --set diag.clinicRegion=${clinic_region}
@@ -379,7 +379,7 @@ Make sure diag-collector components are running:
     - 如果集群未开启 TLS，可以设置 `diag.tlsEnabled=false`，此时创建的 Role 将不会带有 `secrets` 的 `get` 和 `list` 权限。
 
         ```shell
-        helm install --namespace tidb-cluster diag-collector pingcap/diag --version v0.9.0 \
+        helm install --namespace tidb-cluster diag-collector pingcap/diag --version ${chart_version} \
             --set diag.clinicToken=${clinic_token} \
             --set diag.tlsEnabled=false \
             --set diag.clusterRoleEnabled=false  \
@@ -389,7 +389,7 @@ Make sure diag-collector components are running:
     - 如果访问 Docker Hub 网速较慢，可以使用阿里云上的镜像：
 
         ```shell
-        helm install --namespace tidb-cluster diag-collector pingcap/diag --version v0.9.0 \
+        helm install --namespace tidb-cluster diag-collector pingcap/diag --version ${chart_version} \
             --set image.diagImage=registry.cn-beijing.aliyuncs.com/tidb/diag \
             --set diag.clinicToken=${clinic_token} \
             --set diag.clusterRoleEnabled=false \
@@ -476,6 +476,7 @@ Diag 工具的各项操作均会通过 API 完成。
 
     - 从 Kubernetes 集群外访问该 Service 的端口为 `31917`。
     - 该 Service 类型为 NodePort。你可以通过 Kubernetes 集群中任一宿主机的 IP 地址 `${host}` 和端口号 `${port}` 访问该服务。
+    - 若由于网络限制无法直接访问宿主机，你也可以使用 `port-forward` 命令将 Service 的端口 `4917` 重定向到本地，然后通过 `127.0.0.1:4917` 来访问该服务。
 
 下面为使用 Clinic 调用 API 采集数据的步骤。
 

@@ -36,6 +36,32 @@ kubectl create secret generic s3-secret --from-literal=access_key=xxx --from-lit
 
     可以参考 [AWS 官方文档](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html)来为账号创建一个 IAM 角色，并且通过 [AWS 官方文档](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_manage-attach-detach.html)为 IAM 角色赋予需要的权限。由于 `Backup` 需要访问 AWS 的 S3 存储，所以这里给 IAM 赋予了 `AmazonS3FullAccess` 的权限。
 
+    如果是进行基于 AWS Elastic Block Store (EBS) 快照的备份和恢复，除完整的 S3 权限 `AmazonS3FullAccess` 外，还需要以下权限：
+    
+    ```json
+            {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateSnapshot",
+                "ec2:CreateSnapshots",
+                "ec2:CreateTags",
+                "ec2:CreateVolume",
+                "ec2:DeleteSnapshot",
+                "ec2:DeleteTags",
+                "ec2:DeleteVolume",
+                "ec2:DescribeInstances",
+                "ec2:DescribeSnapshots",
+                "ec2:DescribeTags",
+                "ec2:DescribeVolumes",
+                "ec2:DetachVolume",
+                "ebs:ListSnapshotBlocks",
+                "ebs:ListChangedBlocks"
+            ],
+            "Resource": "*"
+        }
+    ```
+
 2. 绑定 IAM 到 TiKV Pod：
 
     在使用 BR 备份的过程中，TiKV Pod 和 BR Pod 一样需要对 S3 存储进行读写操作，所以这里需要给 TiKV Pod 打上 annotation 来绑定 IAM 角色。
@@ -64,15 +90,53 @@ kubectl create secret generic s3-secret --from-literal=access_key=xxx --from-lit
 
 2. 创建 IAM 角色：
 
-    可以参考 [AWS 官方文档](https://docs.aws.amazon.com/eks/latest/userguide/create-service-account-iam-policy-and-role.html)创建一个 IAM 角色，为角色赋予 `AmazonS3FullAccess` 的权限，并且编辑角色的 `Trust relationships`。
+    可以参考 [AWS 官方文档](https://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html)创建一个 IAM 角色，为角色赋予 `AmazonS3FullAccess` 的权限，并且编辑角色的 `Trust relationships`，赋予 tidb-backup-manager 使用此 IAM 角色的权限。
+
+    如果是进行基于 AWS EBS 快照的备份和恢复，除完整的 S3 权限 `AmazonS3FullAccess` 外，还需要以下权限：
+
+    {{< copyable "shell-regular" >}}
+
+    ```json
+            {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateSnapshot",
+                "ec2:CreateSnapshots",
+                "ec2:CreateTags",
+                "ec2:CreateVolume",
+                "ec2:DeleteSnapshot",
+                "ec2:DeleteTags",
+                "ec2:DeleteVolume",
+                "ec2:DescribeInstances",
+                "ec2:DescribeSnapshots",
+                "ec2:DescribeTags",
+                "ec2:DescribeVolumes",
+                "ec2:DetachVolume",
+                "ebs:ListSnapshotBlocks",
+                "ebs:ListChangedBlocks"
+            ],
+            "Resource": "*"
+        }
+    ```
+
+    同时编辑角色的 `Trust relationships`，赋予 tidb-controller-manager 使用此 IAM 角色的权限。
 
 3. 绑定 IAM 到 ServiceAccount 资源上：
 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    kubectl annotate sa tidb-backup-manager -n eks.amazonaws.com/role-arn=arn:aws:iam::123456789012:role/user --namespace=test1
+    kubectl annotate sa tidb-backup-manager eks.amazonaws.com/role-arn=arn:aws:iam::123456789012:role/user --namespace=test1
     ```
+
+    如果是进行基于 AWS EBS 快照的备份和恢复，需要绑定 IAM 到 tidb-controller-manager 的 ServiceAccount 上：
+
+     ```shell
+     kubectl annotate sa tidb-controller-manager eks.amazonaws.com/role-arn=arn:aws:iam::123456789012:role/user --namespace=tidb-admin
+     ```
+
+     重启 TiDB Operator 的 tidb-controller-manager Pod，使配置的 ServiceAccount 生效。
 
 4. 将 ServiceAccount 绑定到 TiKV Pod：
 
@@ -92,7 +156,7 @@ kubectl create secret generic s3-secret --from-literal=access_key=xxx --from-lit
 
 ### 通过服务账号密钥授权
 
-创建 `gcs-secret` secret。该 secret 存放用于访问 GCS 的凭证。`google-credentials.json` 文件存放用户从 GCP console 上下载的 service account key。具体操作参考 [GCP 官方文档](https://cloud.google.com/docs/authentication/getting-started)。
+创建 `gcs-secret` secret。该 secret 存放用于访问 GCS 的凭证。`google-credentials.json` 文件存放用户从 Google Cloud console 上下载的 service account key。具体操作参考 [Google Cloud 官方文档](https://cloud.google.com/docs/authentication/getting-started)。
 
 {{< copyable "shell-regular" >}}
 
@@ -125,7 +189,7 @@ Azure 的客户端支持读取进程环境变量中的 `AZURE_STORAGE_ACCOUNT`�
     {{< copyable "shell-regular" >}}
 
     ```shell
-    kubectl create secret generic azblob-secret-ad --from-literal=AZURE_STORAGE_ACCOUNT=xxx --from-literal=AZURE_CLIENT_ID=yyy --from-    literal=AZURE_TENANT_ID=zzz --from-literal=AZURE_CLIENT_SECRET=aaa --namespace=test1
+    kubectl create secret generic azblob-secret-ad --from-literal=AZURE_STORAGE_ACCOUNT=xxx --from-literal=AZURE_CLIENT_ID=yyy --from-literal=AZURE_TENANT_ID=zzz --from-literal=AZURE_CLIENT_SECRET=aaa --namespace=test1
     ```
 
 2. 绑定 secret 到 TiKV Pod:

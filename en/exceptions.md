@@ -1,11 +1,11 @@
 ---
-title: Common Cluster Exceptions of TiDB in Kubernetes
-summary: Learn the common exceptions during the operation of TiDB clusters in Kubernetes and their solutions.
+title: Common Cluster Exceptions of TiDB on Kubernetes
+summary: Learn the common exceptions during the operation of TiDB clusters on Kubernetes and their solutions.
 ---
 
-# Common Cluster Exceptions of TiDB in Kubernetes
+# Common Cluster Exceptions of TiDB on Kubernetes
 
-This document describes the common exceptions during the operation of TiDB clusters in Kubernetes and their solutions.
+This document describes the common exceptions during the operation of TiDB clusters on Kubernetes and their solutions.
 
 ## TiKV Store is in `Tombstone` status abnormally
 
@@ -52,7 +52,7 @@ Normally, when a TiKV Pod is in a healthy state (`Running`), the corresponding T
         {{< copyable "shell-regular" >}}
 
         ```shell
-        kubectl patch $(kubectl get pv -l app.kubernetes.io/instance=${release_name},tidb.pingcap.com/store-id=${store_id} -o name) -p '{"spec":{"persistentVolumeReclaimPolicy":"Delete"}}
+        kubectl patch $(kubectl get pv -l app.kubernetes.io/instance=${release_name},tidb.pingcap.com/store-id=${store_id} -o name) -p '{"spec":{"persistentVolumeReclaimPolicy":"Delete"}}'
         ```
 
     2. Remove the PVC used by the Pod:

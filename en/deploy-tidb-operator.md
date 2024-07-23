@@ -1,36 +1,35 @@
 ---
-title: Deploy TiDB Operator in Kubernetes
-summary: Learn how to deploy TiDB Operator in Kubernetes.
-aliases: ['/docs/tidb-in-kubernetes/dev/deploy-tidb-operator/']
+title: Deploy TiDB Operator on Kubernetes
+summary: Learn how to deploy TiDB Operator on Kubernetes.
+aliases: ['/docs/tidb-in-kubernetes/dev/deploy-tidb-operator/','/tidb-in-kubernetes/dev/deploy-on-alibaba-cloud','/docs/tidb-in-kubernetes/dev/deploy-on-alibaba-cloud/']
 ---
 
-# Deploy TiDB Operator in Kubernetes
+# Deploy TiDB Operator on Kubernetes
 
-This document describes how to deploy TiDB Operator in Kubernetes.
+This document describes how to deploy TiDB Operator on Kubernetes.
 
 ## Prerequisites
 
 Before deploying TiDB Operator, make sure the following items are installed on your machine:
 
-* Kubernetes >= v1.12
+* Kubernetes >= v1.24
 * [DNS addons](https://kubernetes.io/docs/tasks/access-application-cluster/configure-dns-cluster/)
 * [PersistentVolume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
-* [RBAC](https://kubernetes.io/docs/admin/authorization/rbac) enabled (optional)
+* [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) enabled (optional)
 * [Helm 3](https://helm.sh)
 
 ### Deploy the Kubernetes cluster
 
-TiDB Operator runs in the Kubernetes cluster. You can refer to [the document of how to set up Kubernetes](https://kubernetes.io/docs/setup/) to set up a Kubernetes cluster. Make sure that the Kubernetes version is v1.12 or higher. If you want to deploy a very simple Kubernetes cluster for testing purposes, consult the [Get Started](get-started.md) document.
+TiDB Operator runs in the Kubernetes cluster. You can refer to [the document of how to set up Kubernetes](https://kubernetes.io/docs/setup/) to set up a Kubernetes cluster. Make sure that the Kubernetes version is v1.24 or higher. If you want to deploy a very simple Kubernetes cluster for testing purposes, consult the [Get Started](get-started.md) document.
 
 For some public cloud environments, refer to the following documents:
 
 - [Deploy on AWS EKS](deploy-on-aws-eks.md)
-- [Deploy on GCP GKE](deploy-on-gcp-gke.md)
-- [Deploy on Alibaba Cloud ACK](deploy-on-alibaba-cloud.md)
+- [Deploy on Google Cloud GKE](deploy-on-gcp-gke.md)
 
 TiDB Operator uses [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) to persist the data of TiDB cluster (including the database, monitoring data, and backup data), so the Kubernetes cluster must provide at least one kind of persistent volumes.
 
-It is recommended to enable [RBAC](https://kubernetes.io/docs/admin/authorization/rbac) in the Kubernetes cluster.
+It is recommended to enable [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) in the Kubernetes cluster.
 
 ### Install Helm
 
@@ -45,7 +44,7 @@ TiDB Operator uses [Custom Resource Definition (CRD)](https://kubernetes.io/docs
 {{< copyable "shell-regular" >}}
 
 ```shell
-kubectl create -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/crd.yaml
+kubectl create -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/crd.yaml
 ```
 
 If the server cannot access the Internet, you need to download the `crd.yaml` file on a machine with Internet access before installing:
@@ -53,13 +52,9 @@ If the server cannot access the Internet, you need to download the `crd.yaml` fi
 {{< copyable "shell-regular" >}}
 
 ```shell
-wget https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/crd.yaml
+wget https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/crd.yaml
 kubectl create -f ./crd.yaml
 ```
-
-> **Note:**
->
-> For Kubernetes earlier than 1.16, only v1beta1 CRD is supported, so you need to change `crd.yaml` in the above command to `crd_v1beta1.yaml`.
 
 If the following message is displayed, the CRD installation is successful:
 
@@ -101,7 +96,7 @@ When you use TiDB Operator, `tidb-scheduler` is not mandatory. Refer to [tidb-sc
 
     > **Note:**
     >
-    > `${chart_version}` represents the chart version of TiDB Operator. For example, `v1.3.7`. You can view the currently supported versions by running the `helm search repo -l tidb-operator` command.
+    > `${chart_version}` represents the chart version of TiDB Operator. For example, `v1.6.0`. You can view the currently supported versions by running the `helm search repo -l tidb-operator` command.
 
 2. Configure TiDB Operator
 
@@ -149,15 +144,15 @@ If your server cannot access the Internet, install TiDB Operator offline by the 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    wget http://charts.pingcap.org/tidb-operator-v1.3.7.tgz
+    wget http://charts.pingcap.org/tidb-operator-v1.6.0.tgz
     ```
 
-    Copy the `tidb-operator-v1.3.7.tgz` file to the target server and extract it to the current directory:
+    Copy the `tidb-operator-v1.6.0.tgz` file to the target server and extract it to the current directory:
 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    tar zxvf tidb-operator.v1.3.7.tgz
+    tar zxvf tidb-operator.v1.6.0.tgz
     ```
 
 2. Download the Docker images used by TiDB Operator
@@ -169,27 +164,24 @@ If your server cannot access the Internet, install TiDB Operator offline by the 
     {{< copyable "" >}}
 
     ```shell
-    pingcap/tidb-operator:v1.3.7
-    pingcap/tidb-backup-manager:v1.3.7
+    pingcap/tidb-operator:v1.6.0
+    pingcap/tidb-backup-manager:v1.6.0
     bitnami/kubectl:latest
     pingcap/advanced-statefulset:v0.3.3
-    k8s.gcr.io/kube-scheduler:v1.16.9
     ```
-
-    Among them, `k8s.gcr.io/kube-scheduler:v1.16.9` should be consistent with the version of your Kubernetes cluster. You do not need to download it separately.
 
     Next, download all these images using the following command:
 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    docker pull pingcap/tidb-operator:v1.3.7
-    docker pull pingcap/tidb-backup-manager:v1.3.7
+    docker pull pingcap/tidb-operator:v1.6.0
+    docker pull pingcap/tidb-backup-manager:v1.6.0
     docker pull bitnami/kubectl:latest
     docker pull pingcap/advanced-statefulset:v0.3.3
 
-    docker save -o tidb-operator-v1.3.7.tar pingcap/tidb-operator:v1.3.7
-    docker save -o tidb-backup-manager-v1.3.7.tar pingcap/tidb-backup-manager:v1.3.7
+    docker save -o tidb-operator-v1.6.0.tar pingcap/tidb-operator:v1.6.0
+    docker save -o tidb-backup-manager-v1.6.0.tar pingcap/tidb-backup-manager:v1.6.0
     docker save -o bitnami-kubectl.tar bitnami/kubectl:latest
     docker save -o advanced-statefulset-v0.3.3.tar pingcap/advanced-statefulset:v0.3.3
     ```
@@ -199,36 +191,15 @@ If your server cannot access the Internet, install TiDB Operator offline by the 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    docker load -i tidb-operator-v1.3.7.tar
-    docker load -i tidb-backup-manager-v1.3.7.tar
+    docker load -i tidb-operator-v1.6.0.tar
+    docker load -i tidb-backup-manager-v1.6.0.tar
     docker load -i bitnami-kubectl.tar
     docker load -i advanced-statefulset-v0.3.3.tar
     ```
 
 3. Configure TiDB Operator
 
-    TiDB Operator embeds a `kube-scheduler` to implement a custom scheduler. If you need to deploy `tidb-scheduler`, modify the `./tidb-operator/values.yaml` file to configure the Docker image's name and version of this built-in `kube-scheduler` component. For example, if `kube-scheduler` in your Kubernetes cluster uses the image `k8s.gcr.io/kube-scheduler:v1.16.9`, set `./tidb-operator/values.yaml` as follows:
-
-    ```shell
-    ...
-    scheduler:
-      serviceAccount: tidb-scheduler
-      logLevel: 2
-      replicas: 1
-      schedulerName: tidb-scheduler
-      resources:
-        limits:
-          cpu: 250m
-          memory: 150Mi
-        requests:
-          cpu: 80m
-          memory: 50Mi
-      kubeSchedulerImageName: k8s.gcr.io/kube-scheduler
-      kubeSchedulerImageTag: v1.16.9
-    ...
-    ```
-
-    You can modify other items such as `limits`, `requests`, and `replicas` as needed.
+    Modify the `./tidb-operator/values.yaml` file to configure TiDB Operator.
 
 4. Install TiDB Operator
 

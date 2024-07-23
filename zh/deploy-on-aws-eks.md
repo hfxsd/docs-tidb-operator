@@ -32,8 +32,13 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/deploy-on-aws-eks/']
 
 ## 推荐机型及存储
 
-- 推荐机型：出于性能考虑，推荐 PD 所在节点使用 c5.xlarge，TiDB 所在节点使用 c5.2xlarge，TiKV 或 TiFlash 所在节点使用 r5b.2xlarge。
-- 推荐存储：因为 AWS 目前已经支持 [EBS gp3](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html#gp3-ebs-volume-type) 卷类型，建议使用 EBS gp3 卷类型。对于 gp3 配置，推荐 TiKV 的 gp3 配置达到 400 MiB/s 与 4000 IOPS，推荐 TiFlash 的 gp3 配置达到 625 MiB/s 与 6000 IOPS。
+- 推荐机型：出于性能考虑，推荐：
+    - PD 所在节点：`c7g.xlarge`
+    - TiDB 所在节点：`c7g.4xlarge`
+    - TiKV 或 TiFlash 所在节点：`m7g.4xlarge`
+- 推荐存储：因为 AWS 目前已经支持 [EBS gp3](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/general-purpose.html#gp3-ebs-volume-type) 卷类型，建议使用 EBS gp3 卷类型。对于 gp3 配置，推荐：
+    - TiKV：400 MiB/s 与 4000 IOPS
+    - TiFlash：625 MiB/s 与 6000 IOPS
 - 推荐 AMI 类型：Amazon Linux 2
 
 ## 创建 EKS 集群和节点池
@@ -50,6 +55,8 @@ kind: ClusterConfig
 metadata:
   name: ${clusterName}
   region: ap-northeast-1
+addons:
+  - name: aws-ebs-csi-driver
 
 nodeGroups:
   - name: admin
@@ -57,7 +64,9 @@ nodeGroups:
     privateNetworking: true
     labels:
       dedicated: admin
-
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tidb-1a
     desiredCapacity: 1
     privateNetworking: true
@@ -67,6 +76,9 @@ nodeGroups:
       dedicated: tidb
     taints:
       dedicated: tidb:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tidb-1d
     desiredCapacity: 0
     privateNetworking: true
@@ -76,6 +88,9 @@ nodeGroups:
       dedicated: tidb
     taints:
       dedicated: tidb:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tidb-1c
     desiredCapacity: 1
     privateNetworking: true
@@ -85,35 +100,45 @@ nodeGroups:
       dedicated: tidb
     taints:
       dedicated: tidb:NoSchedule
-
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: pd-1a
     desiredCapacity: 1
     privateNetworking: true
     availabilityZones: ["ap-northeast-1a"]
-    instanceType: c5.xlarge
+    instanceType: c7g.xlarge
     labels:
       dedicated: pd
     taints:
       dedicated: pd:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: pd-1d
     desiredCapacity: 1
     privateNetworking: true
     availabilityZones: ["ap-northeast-1d"]
-    instanceType: c5.xlarge
+    instanceType: c7g.xlarge
     labels:
       dedicated: pd
     taints:
       dedicated: pd:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: pd-1c
     desiredCapacity: 1
     privateNetworking: true
     availabilityZones: ["ap-northeast-1c"]
-    instanceType: c5.xlarge
+    instanceType: c7g.xlarge
     labels:
       dedicated: pd
     taints:
       dedicated: pd:NoSchedule
-
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tikv-1a
     desiredCapacity: 1
     privateNetworking: true
@@ -123,6 +148,9 @@ nodeGroups:
       dedicated: tikv
     taints:
       dedicated: tikv:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tikv-1d
     desiredCapacity: 1
     privateNetworking: true
@@ -132,6 +160,9 @@ nodeGroups:
       dedicated: tikv
     taints:
       dedicated: tikv:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tikv-1c
     desiredCapacity: 1
     privateNetworking: true
@@ -141,6 +172,9 @@ nodeGroups:
       dedicated: tikv
     taints:
       dedicated: tikv:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
 ```
 
 默认只需要两个 TiDB 节点，因此可以设置 `tidb-1d` 节点组的 `desiredCapacity` 为 `0`，后面如果需要可以随时扩容这个节点组。
@@ -168,6 +202,10 @@ eksctl create cluster -f cluster.yaml
 
 ### gp2
 
+> **注意：**
+>
+> 从 EKS Kubernetes 1.23 开始，你需要先部署 EBS CSI 驱动，然后才能使用默认的 gp2 存储类型。详情可见 [Amazon EKS Kubernetes 1.23 的重要通知](https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html#kubernetes-1.23)。
+
 创建 EKS 集群后默认会存在一个 gp2 存储类型的 StorageClass。为了提高存储的 IO 写入性能，推荐配置 StorageClass 的 `mountOptions` 字段来设置存储挂载选项 `nodelalloc` 和 `noatime`。详情可见 [TiDB 环境与系统配置检查](https://docs.pingcap.com/zh/tidb/stable/check-before-deployment#%E5%9C%A8-tikv-%E9%83%A8%E7%BD%B2%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E6%B7%BB%E5%8A%A0%E6%95%B0%E6%8D%AE%E7%9B%98-ext4-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%8C%82%E8%BD%BD%E5%8F%82%E6%95%B0)。
 
 ```yaml
@@ -175,7 +213,8 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 # ...
 mountOptions:
-- nodelalloc,noatime
+  - nodelalloc
+  - noatime
 ```
 
 ### gp3 存储类型（推荐）或其他 EBS 存储类型
@@ -216,7 +255,8 @@ mountOptions:
       iops: "4000"
       throughput: "400"
     mountOptions:
-    - nodelalloc,noatime
+      - nodelalloc
+      - noatime
     ```
 
 4. 在 TidbCluster 的 YAML 文件中，通过 `storageClassName` 字段指定 gp3 存储类来申请 `gp3` 类型的 EBS 存储。可以参考以下 TiKV 配置示例：
@@ -235,7 +275,8 @@ mountOptions:
     apiVersion: storage.k8s.io/v1
     # ...
     mountOptions:
-    - nodelalloc,noatime
+      - nodelalloc
+      - noatime
     ```
 
 如果想了解更多 EBS 存储类型选择和配置信息，请查看 [AWS 官方文档](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html) 和 [Storage Class 官方文档](https://kubernetes.io/docs/concepts/storage/storage-classes/)。
@@ -268,6 +309,9 @@ mountOptions:
               dedicated: tikv
             taints:
               dedicated: tikv:NoSchedule
+            iam:
+              withAddonPolicies:
+                ebs: true
             ...
         ```
 
@@ -287,7 +331,7 @@ mountOptions:
 
     2. 通过[普通挂载方式](https://github.com/kubernetes-sigs/sig-storage-local-static-provisioner/blob/master/docs/operations.md#use-a-whole-disk-as-a-filesystem-pv)将本地存储挂载到 `/mnt/ssd` 目录。
 
-    3. 根据本地存储的挂载情况，修改 [local-volume-provisioner.yaml](https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/eks/local-volume-provisioner.yaml) 文件。
+    3. 根据本地存储的挂载情况，修改 [local-volume-provisioner.yaml](https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/eks/local-volume-provisioner.yaml) 文件。
 
     4. 使用修改后的 `local-volume-provisioner.yaml`，部署并创建一个 `local-storage` 的 Storage Class：
 
@@ -332,8 +376,9 @@ kubectl create namespace tidb-cluster
 {{< copyable "shell-regular" >}}
 
 ```shell
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/aws/tidb-cluster.yaml &&
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/aws/tidb-monitor.yaml
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aws/tidb-cluster.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aws/tidb-monitor.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aws/tidb-dashboard.yaml
 ```
 
 如需了解更详细的配置信息或者进行自定义配置，请参考[配置 TiDB 集群](configure-a-tidb-cluster.md)
@@ -464,7 +509,7 @@ MySQL [(none)]> show status;
 > **注意：**
 >
 > - [MySQL 8.0 默认认证插件](https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin)从 `mysql_native_password` 更新为 `caching_sha2_password`，因此如果使用 MySQL 8.0 客户端访问 TiDB 服务（TiDB 版本 < v4.0.7），并且用户账户有配置密码，需要显示指定 `--default-auth=mysql_native_password` 参数。
-> - TiDB（v4.0.2 起）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见 [TiDB 遥测功能使用文档](https://docs.pingcap.com/zh/tidb/stable/telemetry)。
+> - TiDB（v4.0.2 起且发布于 2023 年 2 月 20 日前的版本）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见 [TiDB 遥测功能使用文档](https://docs.pingcap.com/zh/tidb/stable/telemetry)。自 2023 年 2 月 20 日起，新发布的 TiDB 版本默认不再收集使用情况信息分享给 PingCAP，参见 [TiDB 版本发布时间线](https://docs.pingcap.com/zh/tidb/stable/release-timeline)。
 
 ## 访问 Grafana 监控
 
@@ -518,7 +563,7 @@ eksctl scale nodegroup --cluster ${clusterName} --name tikv-1c --nodes 2 --nodes
 eksctl scale nodegroup --cluster ${clusterName} --name tikv-1d --nodes 2 --nodes-min 2 --nodes-max 2
 ```
 
-更多节点组管理可参考 [eksctl 文档](https://eksctl.io/usage/managing-nodegroups/)。
+更多节点组管理可参考 [eksctl 文档](https://eksctl.io/usage/nodegroups/)。
 
 ### 扩容 TiDB 组件
 
@@ -545,6 +590,9 @@ eksctl scale nodegroup --cluster ${clusterName} --name tikv-1d --nodes 2 --nodes
       dedicated: tiflash
     taints:
       dedicated: tiflash:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tiflash-1d
     desiredCapacity: 1
     privateNetworking: true
@@ -553,6 +601,9 @@ eksctl scale nodegroup --cluster ${clusterName} --name tikv-1d --nodes 2 --nodes
       dedicated: tiflash
     taints:
       dedicated: tiflash:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tiflash-1c
     desiredCapacity: 1
     privateNetworking: true
@@ -561,7 +612,9 @@ eksctl scale nodegroup --cluster ${clusterName} --name tikv-1d --nodes 2 --nodes
       dedicated: tiflash
     taints:
       dedicated: tiflash:NoSchedule
-
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: ticdc-1a
     desiredCapacity: 1
     privateNetworking: true
@@ -570,6 +623,9 @@ eksctl scale nodegroup --cluster ${clusterName} --name tikv-1d --nodes 2 --nodes
       dedicated: ticdc
     taints:
       dedicated: ticdc:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: ticdc-1d
     desiredCapacity: 1
     privateNetworking: true
@@ -578,6 +634,9 @@ eksctl scale nodegroup --cluster ${clusterName} --name tikv-1d --nodes 2 --nodes
       dedicated: ticdc
     taints:
       dedicated: ticdc:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: ticdc-1c
     desiredCapacity: 1
     privateNetworking: true
@@ -586,6 +645,9 @@ eksctl scale nodegroup --cluster ${clusterName} --name tikv-1d --nodes 2 --nodes
       dedicated: ticdc
     taints:
       dedicated: ticdc:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
 ```
 
 具体命令根据 EKS 集群创建情况而定：
@@ -640,4 +702,4 @@ spec:
 
 最后使用 `kubectl -n tidb-cluster apply -f tidb-cluster.yaml` 更新 TiDB 集群配置。
 
-更多可参考 [API 文档](https://github.com/pingcap/tidb-operator/blob/master/docs/api-references/docs.md)和[集群配置文档](configure-a-tidb-cluster.md)完成 CR 文件配置。
+更多可参考 [API 文档](https://github.com/pingcap/tidb-operator/blob/v1.6.0/docs/api-references/docs.md)和[集群配置文档](configure-a-tidb-cluster.md)完成 CR 文件配置。

@@ -1,11 +1,11 @@
 ---
-title: TiDB in Kubernetes Sysbench 性能测试
+title: TiDB on Kubernetes Sysbench 性能测试
 aliases: ['/docs-cn/tidb-in-kubernetes/dev/benchmark-sysbench/']
 ---
 
-# TiDB in Kubernetes Sysbench 性能测试
+# TiDB on Kubernetes Sysbench 性能测试
 
-随着 [TiDB Operator GA 发布](https://pingcap.com/blog-cn/tidb-operator-1.0-ga/)，越来越多用户开始使用 TiDB Operator 在 Kubernetes 中部署管理 TiDB 集群。在本次测试中，我们选择 GKE 平台做了一次深入、全方位的测试，方便大家了解 TiDB 在 Kubernetes 中性能影响因素。
+随着 [TiDB Operator GA 发布](https://cn.pingcap.com/blog/tidb-operator-1.0-ga)，越来越多用户开始使用 TiDB Operator 在 Kubernetes 中部署管理 TiDB 集群。在本次测试中，我们选择 GKE 平台做了一次深入、全方位的测试，方便大家了解 TiDB 在 Kubernetes 中性能影响因素。
 
 ## 目的
 
@@ -83,7 +83,7 @@ set global tidb_disable_txn_auto_retry=0;
 | TiDB     | c2-standard-16 | 3     |
 | Sysbench | c2-standard-30 | 1     |
 
-分别在多可用区和单可用区中对 TiDB 进行性能测试，并将结果相对比。在测试时 (2019.08)，一个 GCP 区域 (region) 下不存在三个能同时提供 c2 机器的可用区，所以我们选择了如下机器型号进行测试：
+分别在多可用区和单可用区中对 TiDB 进行性能测试，并将结果相对比。在测试时 (2019.08)，一个 Google Cloud 区域 (region) 下不存在三个能同时提供 c2 机器的可用区，所以我们选择了如下机器型号进行测试：
 
 | 组件     | 实例类型       | 数量  |
 | :---     | :---------     | :---- |
@@ -96,7 +96,7 @@ set global tidb_disable_txn_auto_retry=0;
 
 > **注意：**
 >
-> GCP 不同的区域可用机型不同。同时测试中发现磁盘性能表现也存在差异，我们统一在 us-central1 中申请机器测试。
+> Google Cloud 不同的区域可用机型不同。同时测试中发现磁盘性能表现也存在差异，我们统一在 us-central1 中申请机器测试。
 
 #### 磁盘
 
@@ -112,7 +112,7 @@ GKE 网络模式使用具备更好扩展性以及功能强大的 [VPC-Native](ht
 
 #### CPU
 
-在单可用集群测试中，我们为 TiDB/TiKV 选择 c2-standard-16 机型测试。在单可用与多可用集群的对比测试中，因为 GCP 区域 (region) 下不存在三个能同时申请 c2-standard-16 机型的可用区，所以我们选择了 n1-standard-16 机型测试。
+在单可用集群测试中，我们为 TiDB/TiKV 选择 c2-standard-16 机型测试。在单可用与多可用集群的对比测试中，因为 Google Cloud 区域 (region) 下不存在三个能同时申请 c2-standard-16 机型的可用区，所以我们选择了 n1-standard-16 机型测试。
 
 ### 操作系统及参数
 
@@ -280,7 +280,7 @@ Latency 对比：
 >
 > 此测试只针对单一测试集进行了测试，表明不同的操作系统、不同的优化与默认设置，都有可能影响性能，所以我们在此不对操作系统做推荐。COS 系统专为容器优化，在安全性、磁盘性能做了优化，在 GKE 是官方推荐系统。
 
-#### K8S Service vs GCP LoadBalancer
+#### K8S Service vs Google Cloud LoadBalancer
 
 通过 Kubernetes 部署 TiDB 集群后，有两种访问 TiDB 集群的场景：集群内通过 Service 访问或集群外通过 Load Balancer IP 访问。本次测试中分别对这两种情况进行了对比测试。
 
@@ -316,11 +316,11 @@ Latency 对比：
 
 ![Service vs Load Balancer](/media/service-vs-load-balancer-latency.png)
 
-从图中可以看到在单纯的 Point Select 测试中，使用 Kubernetes Service 访问 TiDB 时的表现比使用 GCP Load Balancer 访问时要好。
+从图中可以看到在单纯的 Point Select 测试中，使用 Kubernetes Service 访问 TiDB 时的表现比使用 Google Cloud Load Balancer 访问时要好。
 
 #### n1-standard-16 vs c2-standard-16
 
-在 Point Select 读测试中，TiDB 的 CPU 占用首先达到 1400% (16 cores) 以上，此时 TiKV CPU 占用约 1000% (16 cores) 。我们对比了普通型和计算优化型机器下 TiDB 的不同表现。其中 n1-stadnard-16 主频约 2.3G，c2-standard-16 主频约 3.1G。
+在 Point Select 读测试中，TiDB 的 CPU 占用首先达到 1400% (16 cores) 以上，此时 TiKV CPU 占用约 1000% (16 cores) 。我们对比了普通型和计算优化型机器下 TiDB 的不同表现。其中 n1-standard-16 主频约 2.3G，c2-standard-16 主频约 3.1G。
 
 此次测试中操作系统为 Ubuntu，Pod 为 Host 网络，使用 Service 访问 TiDB。
 
@@ -402,7 +402,7 @@ Latency 对比：
 
 ### 单可用区与多可用区对比
 
-GCP 多可用区涉及跨 Zone 通信，网络延迟相比同 Zone 会少许增加。我们使用同样机器配置，对两种部署方案进行同一标准下的性能测试，了解多可用区延迟增加带来的影响。
+Google Cloud 多可用区涉及跨 Zone 通信，网络延迟相比同 Zone 会少许增加。我们使用同样机器配置，对两种部署方案进行同一标准下的性能测试，了解多可用区延迟增加带来的影响。
 
 单可用区：
 
@@ -441,7 +441,7 @@ Latency 对比：
 此次测试主要将典型公有云部署 Kubernetes 运行 TiDB 集群的几种场景使用 sysbench 做了测试，了解不同因素可能带来的影响。从整体看，主要有以下几点：
 
 - VPC-Native 模式下 Host 网络性能略好于 Pod 网络（~7%，以 QPS 差异估算，下同）
-- GCP 的 Ubuntu 系统 Host 网络下单纯的读测试中性能略好于 COS (~9%)
+- Google Cloud 的 Ubuntu 系统 Host 网络下单纯的读测试中性能略好于 COS (~9%)
 - 使用 Load Balancer 在集群外访问，会略损失性能 (~5%)
 - 多可用区下节点之间延迟增加，会对 TiDB 性能产生一定的影响（30% ~ 6%，随并发数增加而下降）
 - Point Select 读测试主要消耗 CPU ，计算型机型相对普通型机器带来了很大 QPS 提升 (50% ~ 60%)

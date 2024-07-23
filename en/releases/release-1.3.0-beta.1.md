@@ -22,7 +22,7 @@ TiDB Operator version: 1.3.0-beta.1
 ## Rolling Update Changes
 
 - Due to changes in [#4358](https://github.com/pingcap/tidb-operator/pull/4358), if the TiDB cluster (>= v5.4) is deployed by TiDB Operator v1.2, upgrading TiDB Operator to v1.3.0-beta.1 causes TiFlash to rolling upgrade. It is recommended to upgrade TiDB Operator to v1.3 before upgrading the TiDB cluster to v5.4.0 or later versions.
-- Due to changes in [#4169](https://github.com/pingcap/tidb-operator/pull/4169) , for TiDB clusters >= v5.0, if `spec.tikv.seperateRocksDBLog: true` or  `spec.tikv.separateRaftLog: true` is configured, upgrading TiDB Operator to v1.3.0-beta.1 causes TiKV to rolling upgrade.
+- Due to changes in [#4169](https://github.com/pingcap/tidb-operator/pull/4169) , for TiDB clusters >= v5.0, if `spec.tikv.separateRocksDBLog: true` or  `spec.tikv.separateRaftLog: true` is configured, upgrading TiDB Operator to v1.3.0-beta.1 causes TiKV to rolling upgrade.
 - Due to changes in [#4198](https://github.com/pingcap/tidb-operator/pull/4198), upgrading TiDB Operator causes the recreation of TidbMonitor Pod.
 
 ## New Features
@@ -33,8 +33,8 @@ TiDB Operator version: 1.3.0-beta.1
 - Support `PodSecurityContext` and other configurations for Discovery ([#4259](https://github.com/pingcap/tidb-operator/pull/4259), [@csuzhangxc](https://github.com/csuzhangxc), [#4208](https://github.com/pingcap/tidb-operator/pull/4208), [@KanShiori](https://github.com/KanShiori))
 - Support configuring `PodManagementPolicy` in TidbCluster CR ([#4211](https://github.com/pingcap/tidb-operator/pull/4211), [@mianhk](https://github.com/mianhk))
 - Support configuring Prometheus shards in TidbMonitor CR ([#4198](https://github.com/pingcap/tidb-operator/pull/4198), [@mikechengwei](https://github.com/mikechengwei))
-- Support deploying TiDB Operator in Kubernetes v1.22 or later versions ([#4195](https://github.com/pingcap/tidb-operator/pull/4195), [#4202](https://github.com/pingcap/tidb-operator/pull/4202), [@KanShiori](https://github.com/KanShiori))
-- Generate v1 CRD to support deploying in Kubernetes v1.22 or later versions ([#4151](https://github.com/pingcap/tidb-operator/pull/4151), [@KanShiori](https://github.com/KanShiori))
+- Support deploying TiDB Operator on Kubernetes v1.22 or later versions ([#4195](https://github.com/pingcap/tidb-operator/pull/4195), [#4202](https://github.com/pingcap/tidb-operator/pull/4202), [@KanShiori](https://github.com/KanShiori))
+- Generate v1 CRD to support deploying on Kubernetes v1.22 or later versions ([#4151](https://github.com/pingcap/tidb-operator/pull/4151), [@KanShiori](https://github.com/KanShiori))
 
 ## Improvements
 

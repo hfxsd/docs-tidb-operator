@@ -6,7 +6,7 @@ aliases: ['/docs/tidb-in-kubernetes/dev/restore-from-gcs/']
 
 # Restore Data from GCS
 
-This document describes how to restore the TiDB cluster data backed up using TiDB Operator in Kubernetes.
+This document describes how to restore the TiDB cluster data backed up using TiDB Operator on Kubernetes.
 
 The restore method described in this document is implemented based on CustomResourceDefinition (CRD) in TiDB Operator v1.1 or later versions. For the underlying implementation, [TiDB Lightning TiDB-backend](https://docs.pingcap.com/tidb/stable/tidb-lightning-backends#tidb-lightning-tidb-backend) is used to perform the restore.
 
@@ -28,7 +28,7 @@ Before you perform the data restore, you need to prepare the restore environment
 
 ### Prepare the restore environment
 
-1. Download [`backup-rbac.yaml`](https://github.com/pingcap/tidb-operator/blob/master/manifests/backup/backup-rbac.yaml) and execute the following command to create the role-based access control (RBAC) resources in the `test2` namespace:
+1. Download [`backup-rbac.yaml`](https://github.com/pingcap/tidb-operator/blob/v1.6.0/manifests/backup/backup-rbac.yaml) and execute the following command to create the role-based access control (RBAC) resources in the `test2` namespace:
 
     {{< copyable "shell-regular" >}}
 

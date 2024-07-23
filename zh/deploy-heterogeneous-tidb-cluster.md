@@ -32,22 +32,25 @@ summary: 本文档介绍如何为已有的 TiDB 集群部署一个异构集群�
 
 1. 为异构集群新建一个集群配置文件。
 
-    例如，将如下配置存为 `cluster.yaml` 文件，并替换 `${heterogeneous_cluster_name}` 为自己想命名的异构集群名字，替换 `${origin_cluster_name}` 为想要加入的已有集群名称。
+    执行以下指令创建异构集群配置文件，其中 `origin_cluster_name` 为要加入的原集群名称，`heterogeneous_cluster_name` 为异构集群名称，为了后续在 TidbMonitor 的 Grafana 中同时查看原集群和异构集群的监控数据，请以原集群名称为前缀对异构集群进行命名。
 
-    > **注意**:
+    > **注意：**
     >
     > 相比于普通 TiDB 集群配置文件，异构集群配置文件的唯一区别是，你需要额外配置 `spec.cluster.name` 字段为已有的 TiDB 集群名。通过此字段，TiDB Operator 会将该异构集群加入到已有的 TiDB 集群。
 
     {{< copyable "" >}}
 
-    ```yaml
+    ```bash
+    origin_cluster_name=basic
+    heterogeneous_cluster_name=basic-heterog
+    cat > cluster.yaml << EOF
     apiVersion: pingcap.com/v1alpha1
     kind: TidbCluster
     metadata:
       name: ${heterogeneous_cluster_name}
     spec:
       configUpdateStrategy: RollingUpdate
-      version: v6.1.0
+      version: v8.1.0
       timezone: UTC
       pvReclaimPolicy: Delete
       discovery: {}
@@ -77,6 +80,7 @@ summary: 本文档介绍如何为已有的 TiDB 集群部署一个异构集群�
           - resources:
               requests:
                 storage: 100Gi
+    EOF
     ```
 
     TiDB 集群更多的配置项和字段含义，请参考 [TiDB 集群配置文档](configure-a-tidb-cluster.md)。
@@ -112,7 +116,7 @@ summary: 本文档介绍如何为已有的 TiDB 集群部署一个异构集群�
 
     例如，将如下配置存为 `cluster.yaml` 文件，并替换 `${heterogeneous_cluster_name}` 为自己想命名的异构集群名字，`${origin_cluster_name}` 替换为想要加入的已有集群名称。
 
-    > **注意**:
+    > **注意：**
     >
     > 相比于普通 TiDB 集群配置文件，异构集群配置文件的唯一区别是，你需要额外配置 `spec.cluster.name` 字段为已有的 TiDB 集群名。通过此字段，TiDB Operator 会将该异构集群加入到已有的 TiDB 集群。
 
@@ -125,7 +129,7 @@ summary: 本文档介绍如何为已有的 TiDB 集群部署一个异构集群�
       tlsCluster:
         enabled: true
       configUpdateStrategy: RollingUpdate
-      version: v6.1.0
+      version: v8.1.0
       timezone: UTC
       pvReclaimPolicy: Delete
       discovery: {}
@@ -161,7 +165,7 @@ summary: 本文档介绍如何为已有的 TiDB 集群部署一个异构集群�
 
     其中，`spec.tlsCluster.enabled` 表示组件间是否开启 TLS，`spec.tidb.tlsClient.enabled` 表示 MySQL 客户端是否开启 TLS。
 
-    - 详细的异构 TLS 集群配置示例，请参阅 [`heterogeneous-tls`](https://github.com/pingcap/tidb-operator/tree/master/examples/heterogeneous-tls)。
+    - 详细的异构 TLS 集群配置示例，请参阅 [`heterogeneous-tls`](https://github.com/pingcap/tidb-operator/tree/v1.6.0/examples/heterogeneous-tls)。
 
     - TiDB 集群更多的配置项和字段含义，请参考 [TiDB 集群配置文档](configure-a-tidb-cluster.md)。
 
@@ -215,7 +219,7 @@ summary: 本文档介绍如何为已有的 TiDB 集群部署一个异构集群�
         version: 7.5.11
     initializer:
         baseImage: pingcap/tidb-monitor-initializer
-        version: v6.1.0
+        version: v8.1.0
     reloader:
         baseImage: pingcap/tidb-monitor-reloader
         version: v1.0.1

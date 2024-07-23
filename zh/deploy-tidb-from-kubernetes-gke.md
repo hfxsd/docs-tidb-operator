@@ -1,12 +1,12 @@
 ---
-title: 在 GCP 上通过 Kubernetes 部署 TiDB 集群
-summary: 在 GCP 上通过 Kubernetes 部署 TiDB 集群教程。
+title: 在 Google Cloud 上通过 Kubernetes 部署 TiDB 集群
+summary: 在 Google Cloud 上通过 Kubernetes 部署 TiDB 集群教程。
 aliases: ['/docs-cn/tidb-in-kubernetes/dev/deploy-tidb-from-kubernetes-gke/']
 ---
 
-# 在 GCP 上通过 Kubernetes 部署 TiDB 集群
+# 在 Google Cloud 上通过 Kubernetes 部署 TiDB 集群
 
-本文介绍如何使用 [TiDB Operator](https://github.com/pingcap/tidb-operator) 在 GCP 上部署 TiDB 集群。本教程需要在 [Google Cloud Shell](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/pingcap/docs-tidb-operator&tutorial=zh/deploy-tidb-from-kubernetes-gke.md) 上运行。
+本文介绍如何使用 [TiDB Operator](https://github.com/pingcap/tidb-operator) 在 Google Cloud 上部署 TiDB 集群。本教程需要在 [Google Cloud Shell](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/pingcap/docs-tidb-operator&tutorial=zh/deploy-tidb-from-kubernetes-gke.md) 上运行。
 
 <a href="https://console.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/pingcap/docs-tidb-operator&cloudshell_tutorial=zh/deploy-tidb-from-kubernetes-gke.md"><img src="https://gstatic.com/cloudssh/images/open-btn.png"/></a>
 
@@ -22,7 +22,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/deploy-tidb-from-kubernetes-gke/']
 
 > **警告：**
 >
-> 本文中的部署说明仅用于测试目的，**不要**直接用于生产环境。如果要在生产环境部署，请参阅[在 GCP 上通过 Kubernetes 部署 TiDB 集群](deploy-on-gcp-gke.md)。
+> 本文中的部署说明仅用于测试目的，**不要**直接用于生产环境。如果要在生产环境部署，请参阅[在 Google Cloud 上通过 Kubernetes 部署 TiDB 集群](deploy-on-gcp-gke.md)。
 
 ## 选择一个项目
 
@@ -94,19 +94,15 @@ kubectl get nodes
 TiDB Operator 使用 [Custom Resource Definition (CRD)](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions) 扩展 Kubernetes，所以要使用 TiDB Operator，必须先创建 `TidbCluster` 等各种自定义资源类型：
 
 ```shell
-kubectl create -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/crd.yaml && \
+kubectl create -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/crd.yaml && \
 kubectl get crd tidbclusters.pingcap.com
 ```
-
-> **注意：**
->
-> 对于 Kubernetes 1.16 之前的版本，Kubernetes 仅支持 v1beta1 版本的 CRD，你需要将上述命令中的 `crd.yaml` 修改为 `crd_v1beta1.yaml`。
 
 创建 `TidbCluster` 自定义资源类型后，接下来在 Kubernetes 集群上安装 TiDB Operator。
 
 ```shell
 kubectl create namespace tidb-admin
-helm install --namespace tidb-admin tidb-operator pingcap/tidb-operator --version v1.3.7
+helm install --namespace tidb-admin tidb-operator pingcap/tidb-operator --version v1.6.0
 kubectl get po -n tidb-admin -l app.kubernetes.io/name=tidb-operator
 ```
 
@@ -123,13 +119,13 @@ kubectl get po -n tidb-admin -l app.kubernetes.io/name=tidb-operator
 2. 部署 TiDB 集群：
 
     ``` shell
-    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/basic/tidb-cluster.yaml -n demo
+    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/basic/tidb-cluster.yaml -n demo
     ```
 
 3. 部署 TiDB 集群监控：
 
     ``` shell
-    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/basic/tidb-monitor.yaml -n demo
+    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/basic/tidb-monitor.yaml -n demo
     ```
 
 4. 通过下面命令查看 Pod 状态：
@@ -181,7 +177,7 @@ SET PASSWORD FOR 'root'@'%' = '<change-to-your-password>';
 
 > **注意：**
 >
-> TiDB（v4.0.2 起）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见[遥测](https://docs.pingcap.com/zh/tidb/stable/telemetry)。
+> TiDB（v4.0.2 起且发布于 2023 年 2 月 20 日前的版本）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见 [TiDB 遥测功能使用文档](https://docs.pingcap.com/zh/tidb/stable/telemetry)。自 2023 年 2 月 20 日起，新发布的 TiDB 版本默认不再收集使用情况信息分享给 PingCAP，参见 [TiDB 版本发布时间线](https://docs.pingcap.com/zh/tidb/stable/release-timeline)。
 
 ## 扩容 TiDB 集群
 

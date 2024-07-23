@@ -8,7 +8,7 @@ aliases: ['/docs/tidb-in-kubernetes/dev/deploy-on-aws-eks/']
 
 This document describes how to deploy a TiDB cluster on AWS Elastic Kubernetes Service (EKS).
 
-To deploy TiDB Operator and the TiDB cluster in a self-managed Kubernetes environment, refer to [Deploy TiDB Operator](deploy-tidb-operator.md) and [Deploy TiDB in General Kubernetes](deploy-on-general-kubernetes.md).
+To deploy TiDB Operator and the TiDB cluster in a self-managed Kubernetes environment, refer to [Deploy TiDB Operator](deploy-tidb-operator.md) and [Deploy TiDB on General Kubernetes](deploy-on-general-kubernetes.md).
 
 ## Prerequisites
 
@@ -32,10 +32,10 @@ To verify whether AWS CLI is configured correctly, run the `aws configure list` 
 ## Recommended instance types and storage
 
 - Instance types: to gain better performance, the following is recommended:
-    - PD nodes: `c5.xlarge`
-    - TiDB nodes: `c5.2xlarge`
-    - TiKV or TiFlash nodes: `r5b.2xlarge`
-- Storage: Because AWS supports the [EBS `gp3`](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html#gp3-ebs-volume-type) volume type, it is recommended to use EBS `gp3`. For `gp3` provisioning, the following is recommended:
+    - PD nodes: `c7g.xlarge`
+    - TiDB nodes: `c7g.4xlarge`
+    - TiKV or TiFlash nodes: `m7g.4xlarge`
+- Storage: Because AWS supports the [EBS `gp3`](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/general-purpose.html#gp3-ebs-volume-type) volume type, it is recommended to use EBS `gp3`. For `gp3` provisioning, the following is recommended:
     - TiKV: 400 MiB/s, 4000 IOPS
     - TiFlash: 625 MiB/s, 6000 IOPS
 - AMI type: Amazon Linux 2
@@ -54,6 +54,8 @@ kind: ClusterConfig
 metadata:
   name: ${clusterName}
   region: ap-northeast-1
+addons:
+  - name: aws-ebs-csi-driver
 
 nodeGroups:
   - name: admin
@@ -61,7 +63,9 @@ nodeGroups:
     privateNetworking: true
     labels:
       dedicated: admin
-
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tidb-1a
     desiredCapacity: 1
     privateNetworking: true
@@ -71,6 +75,9 @@ nodeGroups:
       dedicated: tidb
     taints:
       dedicated: tidb:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tidb-1d
     desiredCapacity: 0
     privateNetworking: true
@@ -80,6 +87,9 @@ nodeGroups:
       dedicated: tidb
     taints:
       dedicated: tidb:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tidb-1c
     desiredCapacity: 1
     privateNetworking: true
@@ -89,35 +99,45 @@ nodeGroups:
       dedicated: tidb
     taints:
       dedicated: tidb:NoSchedule
-
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: pd-1a
     desiredCapacity: 1
     privateNetworking: true
     availabilityZones: ["ap-northeast-1a"]
-    instanceType: c5.xlarge
+    instanceType: c7g.xlarge
     labels:
       dedicated: pd
     taints:
       dedicated: pd:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: pd-1d
     desiredCapacity: 1
     privateNetworking: true
     availabilityZones: ["ap-northeast-1d"]
-    instanceType: c5.xlarge
+    instanceType: c7g.xlarge
     labels:
       dedicated: pd
     taints:
       dedicated: pd:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: pd-1c
     desiredCapacity: 1
     privateNetworking: true
     availabilityZones: ["ap-northeast-1c"]
-    instanceType: c5.xlarge
+    instanceType: c7g.xlarge
     labels:
       dedicated: pd
     taints:
       dedicated: pd:NoSchedule
-
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tikv-1a
     desiredCapacity: 1
     privateNetworking: true
@@ -127,6 +147,9 @@ nodeGroups:
       dedicated: tikv
     taints:
       dedicated: tikv:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tikv-1d
     desiredCapacity: 1
     privateNetworking: true
@@ -136,6 +159,9 @@ nodeGroups:
       dedicated: tikv
     taints:
       dedicated: tikv:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tikv-1c
     desiredCapacity: 1
     privateNetworking: true
@@ -145,6 +171,9 @@ nodeGroups:
       dedicated: tikv
     taints:
       dedicated: tikv:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
 ```
 
 By default, only two TiDB nodes are required, so you can set the `desiredCapacity` of the `tidb-1d` node group to `0`. You can scale out this node group any time if necessary.
@@ -176,6 +205,10 @@ This section describes how to configure the storage class for different storage 
 
 ### Configure `gp2`
 
+> **note:**
+>
+> Starting from EKS Kubernetes 1.23, you need to deploy the EBS CSI driver before using the default gp2 storage class. For details, refer to [the notice for Amazon EKS Kubernetes 1.23](https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html#kubernetes-1.23).
+
 After you create an EKS cluster, the default StorageClass is `gp2`. To improve I/O write performance, it is recommended to configure `nodelalloc` and `noatime` in the `mountOptions` field of the `StorageClass` resource.
 
 ```yaml
@@ -183,7 +216,8 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 # ...
 mountOptions:
-- nodelalloc,noatime
+  - nodelalloc
+  - noatime
 ```
 
 For more information on the mount options, see [TiDB Environment and System Configuration Check](https://docs.pingcap.com/tidb/stable/check-before-deployment#mount-the-data-disk-ext4-filesystem-with-options-on-the-target-machines-that-deploy-tikv).
@@ -226,7 +260,8 @@ The following example shows how to create and configure a StorageClass for the `
       iops: "4000"
       throughput: "400"
     mountOptions:
-    - nodelalloc,noatime
+      - nodelalloc
+      - noatime
     ```
 
 4. In the TidbCluster YAML file, configure `gp3` in the `storageClassName` field. For example:
@@ -245,7 +280,8 @@ The following example shows how to create and configure a StorageClass for the `
     apiVersion: storage.k8s.io/v1
     # ...
     mountOptions:
-    - nodelalloc,noatime
+      - nodelalloc
+      - noatime
     ```
 
     For more information on the mount options, see [TiDB Environment and System Configuration Check](https://docs.pingcap.com/tidb/stable/check-before-deployment#mount-the-data-disk-ext4-filesystem-with-options-on-the-target-machines-that-deploy-tikv).
@@ -280,6 +316,9 @@ The following `c5d.4xlarge` example shows how to configure StorageClass for the 
               dedicated: tikv
             taints:
               dedicated: tikv:NoSchedule
+            iam:
+              withAddonPolicies:
+                ebs: true
             ...
         ```
 
@@ -302,7 +341,7 @@ The following `c5d.4xlarge` example shows how to configure StorageClass for the 
 
     2. [Mount the local storage](https://github.com/kubernetes-sigs/sig-storage-local-static-provisioner/blob/master/docs/operations.md#use-a-whole-disk-as-a-filesystem-pv) to the `/mnt/ssd` directory.
 
-    3. According to the mounting configuration, modify the [local-volume-provisioner.yaml](https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/eks/local-volume-provisioner.yaml) file.
+    3. According to the mounting configuration, modify the [local-volume-provisioner.yaml](https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/eks/local-volume-provisioner.yaml) file.
 
     4. Deploy and create a `local-storage` storage class using the modified `local-volume-provisioner.yaml` file.
 
@@ -347,8 +386,9 @@ First, download the sample `TidbCluster` and `TidbMonitor` configuration files:
 {{< copyable "shell-regular" >}}
 
 ```shell
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/aws/tidb-cluster.yaml && \
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/aws/tidb-monitor.yaml
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aws/tidb-cluster.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aws/tidb-monitor.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aws/tidb-dashboard.yaml
 ```
 
 Refer to [configure the TiDB cluster](configure-a-tidb-cluster.md) to further customize and configure the CR before applying.
@@ -456,9 +496,9 @@ After the bastion host is created, you can connect to the bastion host via SSH a
     $ mysql --comments -h abfc623004ccb4cc3b363f3f37475af1-9774d22c27310bc1.elb.us-west-2.amazonaws.com -P 4000 -u root
     Welcome to the MariaDB monitor.  Commands end with ; or \g.
     Your MySQL connection id is 1189
-    Server version: 5.7.25-TiDB-v4.0.2 TiDB Server (Apache License 2.0) Community Edition, MySQL 5.7 compatible
+    Server version: 8.0.11-TiDB-v8.1.0 TiDB Server (Apache License 2.0) Community Edition, MySQL 8.0 compatible
 
-    Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+    Copyright (c) 2000, 2022, Oracle and/or its affiliates.
 
     Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
@@ -479,7 +519,7 @@ After the bastion host is created, you can connect to the bastion host via SSH a
 > **Note:**
 >
 > * [The default authentication plugin of MySQL 8.0](https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin) is updated from `mysql_native_password` to `caching_sha2_password`. Therefore, if you use MySQL client from MySQL 8.0 to access the TiDB service (cluster version < v4.0.7), and if the user account has a password, you need to explicitly specify the `--default-auth=mysql_native_password` parameter.
-> * By default, TiDB (starting from v4.0.2) periodically shares usage details with PingCAP to help understand how to improve the product. For details about what is shared and how to disable the sharing, see [Telemetry](https://docs.pingcap.com/tidb/stable/telemetry).
+> * By default, TiDB (versions starting from v4.0.2 and released before February 20, 2023) periodically shares usage details with PingCAP to help understand how to improve the product. For details about what is shared and how to disable the sharing, see [Telemetry](https://docs.pingcap.com/tidb/stable/telemetry). Starting from February 20, 2023, the telemetry feature is disabled by default in newly released TiDB versions. See [TiDB Release Timeline](https://docs.pingcap.com/tidb/stable/release-timeline) for details.
 
 ## Access the Grafana monitoring dashboard
 
@@ -541,7 +581,7 @@ eksctl scale nodegroup --cluster ${clusterName} --name tikv-1c --nodes 2 --nodes
 eksctl scale nodegroup --cluster ${clusterName} --name tikv-1d --nodes 2 --nodes-min 2 --nodes-max 2
 ```
 
-For more information on managing node groups, refer to [`eksctl` documentation](https://eksctl.io/usage/managing-nodegroups/).
+For more information on managing node groups, refer to [`eksctl` documentation](https://eksctl.io/usage/nodegroups/).
 
 ### Scale out TiDB components
 
@@ -568,6 +608,9 @@ In the configuration file of eksctl (`cluster.yaml`), add the following two item
       dedicated: tiflash
     taints:
       dedicated: tiflash:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tiflash-1d
     desiredCapacity: 1
     privateNetworking: true
@@ -576,6 +619,9 @@ In the configuration file of eksctl (`cluster.yaml`), add the following two item
       dedicated: tiflash
     taints:
       dedicated: tiflash:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: tiflash-1c
     desiredCapacity: 1
     privateNetworking: true
@@ -584,7 +630,9 @@ In the configuration file of eksctl (`cluster.yaml`), add the following two item
       dedicated: tiflash
     taints:
       dedicated: tiflash:NoSchedule
-
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: ticdc-1a
     desiredCapacity: 1
     privateNetworking: true
@@ -593,6 +641,9 @@ In the configuration file of eksctl (`cluster.yaml`), add the following two item
       dedicated: ticdc
     taints:
       dedicated: ticdc:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: ticdc-1d
     desiredCapacity: 1
     privateNetworking: true
@@ -601,6 +652,9 @@ In the configuration file of eksctl (`cluster.yaml`), add the following two item
       dedicated: ticdc
     taints:
       dedicated: ticdc:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
   - name: ticdc-1c
     desiredCapacity: 1
     privateNetworking: true
@@ -609,6 +663,9 @@ In the configuration file of eksctl (`cluster.yaml`), add the following two item
       dedicated: ticdc
     taints:
       dedicated: ticdc:NoSchedule
+    iam:
+      withAddonPolicies:
+        ebs: true
 ```
 
 Depending on the EKS cluster status, use different commands:
@@ -663,4 +720,4 @@ Depending on the EKS cluster status, use different commands:
 
 Finally, execute `kubectl -n tidb-cluster apply -f tidb-cluster.yaml` to update the TiDB cluster configuration.
 
-For detailed CR configuration, refer to [API references](https://github.com/pingcap/tidb-operator/blob/master/docs/api-references/docs.md) and [Configure a TiDB Cluster](configure-a-tidb-cluster.md).
+For detailed CR configuration, refer to [API references](https://github.com/pingcap/tidb-operator/blob/v1.6.0/docs/api-references/docs.md) and [Configure a TiDB Cluster](configure-a-tidb-cluster.md).

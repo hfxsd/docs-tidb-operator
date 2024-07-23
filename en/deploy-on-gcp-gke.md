@@ -1,24 +1,24 @@
 ---
-title: Deploy TiDB on GCP GKE
-summary: Learn how to deploy a TiDB cluster on GCP GKE.
+title: Deploy TiDB on Google Cloud GKE
+summary: Learn how to deploy a TiDB cluster on Google Cloud GKE.
 aliases: ['/docs/tidb-in-kubernetes/dev/deploy-on-gcp-gke/']
 ---
 
-# Deploy TiDB on GCP GKE
+# Deploy TiDB on Google Cloud GKE
 
 <!-- markdownlint-disable MD029 -->
 <!-- markdownlint-disable MD037 -->
 
-This document describes how to deploy a GCP Google Kubernetes Engine (GKE) cluster and deploy a TiDB cluster on GCP GKE.
+This document describes how to deploy a Google Kubernetes Engine (GKE) cluster and deploy a TiDB cluster on GKE.
 
-To deploy TiDB Operator and the TiDB cluster in a self-managed Kubernetes environment, refer to [Deploy TiDB Operator](deploy-tidb-operator.md) and [Deploy TiDB in General Kubernetes](deploy-on-general-kubernetes.md).
+To deploy TiDB Operator and the TiDB cluster in a self-managed Kubernetes environment, refer to [Deploy TiDB Operator](deploy-tidb-operator.md) and [Deploy TiDB on General Kubernetes](deploy-on-general-kubernetes.md).
 
 ## Prerequisites
 
-Before deploying a TiDB cluster on GCP GKE, make sure the following requirements are satisfied:
+Before deploying a TiDB cluster on GKE, make sure the following requirements are satisfied:
 
 * Install [Helm 3](https://helm.sh/docs/intro/install/): used for deploying TiDB Operator.
-* Install [gcloud](https://cloud.google.com/sdk/gcloud): a command-line tool used for creating and managing GCP services.
+* Install [gcloud](https://cloud.google.com/sdk/gcloud): a command-line tool used for creating and managing Google Cloud services.
 * Complete the operations in the **Before you begin** section of [GKE Quickstart](https://cloud.google.com/kubernetes-engine/docs/quickstart#before-you-begin).
 
     This guide includes the following contents:
@@ -30,19 +30,19 @@ Before deploying a TiDB cluster on GCP GKE, make sure the following requirements
 
 * Instance types: to gain better performance, the following is recommended:
     * PD nodes: `n2-standard-4`
-    * TiDB nodes: `n2-standard-8`
-    * TiKV or TiFlash nodes: `n2-highmem-8`
+    * TiDB nodes: `n2-standard-16`
+    * TiKV or TiFlash nodes: `n2-standard-16`
 * Storage: For TiKV or TiFlash, it is recommended to use [pd-ssd](https://cloud.google.com/compute/docs/disks/performance#type_comparison) disk type.
 
-## Configure the GCP service
+## Configure the Google Cloud service
 
-Configure your GCP project and default region:
+Configure your Google Cloud project and default region:
 
 {{< copyable "shell-regular" >}}
 
 ```bash
-gcloud config set core/project <gcp-project>
-gcloud config set compute/region <gcp-region>
+gcloud config set core/project <google-cloud-project>
+gcloud config set compute/region <google-cloud-region>
 ```
 
 ## Create a GKE cluster and node pool
@@ -92,13 +92,14 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
   name: pd-custom
-provisioner: kubernetes.io/gce-pd 
+provisioner: kubernetes.io/gce-pd
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
 parameters:
   type: pd-ssd
 mountOptions:
-  - nodelalloc,noatime
+  - nodelalloc
+  - noatime
 ```
 
 > **Note:**
@@ -107,9 +108,9 @@ mountOptions:
 
 ### Use local storage
 
-For the production environment, use [zonal persistent disks](https://cloud.google.com/compute/docs/disks#pdspecs). 
+For the production environment, use [zonal persistent disks](https://cloud.google.com/compute/docs/disks#pdspecs).
 
-If you need to simulate bare-metal performance, some GCP instance types provide additional [local store volumes](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/local-ssd). You can choose such instances for the TiKV node pool to achieve higher IOPS and lower latency.
+If you need to simulate bare-metal performance, some Google Cloud instance types provide additional [local store volumes](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/local-ssd). You can choose such instances for the TiKV node pool to achieve higher IOPS and lower latency.
 
 > **Note:**
 >
@@ -135,7 +136,7 @@ If you need to simulate bare-metal performance, some GCP instance types provide 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/gke/local-ssd-provision/local-ssd-provision.yaml
+    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/gke/local-ssd-provision/local-ssd-provision.yaml
     ```
 
 3. Use the local storage.
@@ -150,7 +151,7 @@ To deploy TiDB Operator on GKE, refer to [deploy TiDB Operator](get-started.md#s
 
 ## Deploy a TiDB cluster and the monitoring component
 
-This section describes how to deploy a TiDB cluster and its monitoring component on GCP GKE.
+This section describes how to deploy a TiDB cluster and its monitoring component on GKE.
 
 ### Create namespace
 
@@ -173,8 +174,9 @@ First, download the sample `TidbCluster` and `TidbMonitor` configuration files:
 {{< copyable "shell-regular" >}}
 
 ```shell
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/gcp/tidb-cluster.yaml && \
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/gcp/tidb-monitor.yaml
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/gcp/tidb-cluster.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/gcp/tidb-monitor.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/gcp/tidb-dashboard.yaml
 ```
 
 Refer to [configure the TiDB cluster](configure-a-tidb-cluster.md) to further customize and configure the CR before applying.
@@ -278,9 +280,9 @@ After the bastion host is created, you can connect to the bastion host via SSH a
     $ mysql --comments -h 10.128.15.243 -P 4000 -u root
     Welcome to the MariaDB monitor.  Commands end with ; or \g.
     Your MySQL connection id is 7823
-    Server version: 5.7.25-TiDB-v4.0.4 TiDB Server (Apache License 2.0) Community Edition, MySQL 5.7 compatible
+    Server version: 8.0.11-TiDB-v8.1.0 TiDB Server (Apache License 2.0) Community Edition, MySQL 8.0 compatible
 
-    Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+    Copyright (c) 2000, 2022, Oracle and/or its affiliates.
 
     Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
@@ -301,7 +303,7 @@ After the bastion host is created, you can connect to the bastion host via SSH a
 > **Note:**
 >
 > * [The default authentication plugin of MySQL 8.0](https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin) is updated from `mysql_native_password` to `caching_sha2_password`. Therefore, if you use MySQL client from MySQL 8.0 to access the TiDB service (TiDB version < v4.0.7), and if the user account has a password, you need to explicitly specify the `--default-auth=mysql_native_password` parameter.
-> * By default, TiDB (starting from v4.0.2) periodically shares usage details with PingCAP to help understand how to improve the product. For details about what is shared and how to disable the sharing, see [Telemetry](https://docs.pingcap.com/tidb/stable/telemetry).
+> * By default, TiDB (versions starting from v4.0.2 and released before February 20, 2023) periodically shares usage details with PingCAP to help understand how to improve the product. For details about what is shared and how to disable the sharing, see [Telemetry](https://docs.pingcap.com/tidb/stable/telemetry). Starting from February 20, 2023, the telemetry feature is disabled by default in newly released TiDB versions. See [TiDB Release Timeline](https://docs.pingcap.com/tidb/stable/release-timeline) for details.
 
 ### Access the Grafana monitoring dashboard
 
@@ -328,6 +330,26 @@ You can access the `${grafana-lb}:3000` address using your web browser to view m
 > **Note:**
 >
 > The default Grafana username and password are both `admin`.
+
+### Access TiDB Dashboard Web UI
+
+Obtain the `LoadBalancer` domain name of TiDB Dashboard by running the following command:
+
+{{< copyable "shell-regular" >}}
+
+```shell
+kubectl -n tidb-cluster get svc basic-tidb-dashboard-exposed
+```
+
+The following is an example:
+
+```
+$ kubectl -n tidb-cluster get svc basic-tidb-dashboard-exposed
+NAME                     TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)               AGE
+basic-tidb-dashboard-exposed            LoadBalancer   10.15.255.169   34.123.168.114   12333:30657/TCP        35m
+```
+
+You can view monitoring metrics of TiDB Dashboard by visiting `${EXTERNAL-IP}:12333` using your web browser.
 
 ## Upgrade
 
@@ -446,4 +468,4 @@ The two components are *not required* in the deployment. This section shows a qu
 
 Finally, execute `kubectl -n tidb-cluster apply -f tidb-cluster.yaml` to update the TiDB cluster configuration.
 
-For detailed CR configuration, refer to [API references](https://github.com/pingcap/tidb-operator/blob/master/docs/api-references/docs.md) and [Configure a TiDB Cluster](configure-a-tidb-cluster.md).
+For detailed CR configuration, refer to [API references](https://github.com/pingcap/tidb-operator/blob/v1.6.0/docs/api-references/docs.md) and [Configure a TiDB Cluster](configure-a-tidb-cluster.md).

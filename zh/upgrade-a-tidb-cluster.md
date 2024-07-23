@@ -12,7 +12,11 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/upgrade-a-tidb-cluster/']
 
 Kubernetes 提供了[滚动更新功能](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/)，在不影响应用可用性的前提下执行更新。
 
-使用滚动更新时，TiDB Operator 会按 PD、TiKV、TiDB 的顺序，串行地删除旧版本的 Pod，并创建新版本的 Pod。当新版本的 Pod 正常运行后，再处理下一个 Pod。
+使用滚动更新时，TiDB Operator 会按 PD、TiProxy、TiFlash、TiKV、TiDB 的顺序，串行地删除旧版本的 Pod，并创建新版本的 Pod。当新版本的 Pod 正常运行后，再处理下一个 Pod。
+
+> **注意：**
+>
+> 当集群中部署了 [PD 微服务](https://docs.pingcap.com/zh/tidb/dev/pd-microservices)（从 TiDB v8.0.0 版本开始支持）时，如果采用滚动更新来升级 TiDB 集群，TiDB Operator 会按照 PD 各个微服务组件、PD、TiKV、TiDB 的顺序，串行地删除旧版本的 Pod 并创建新版本的 Pod。当新版本的 Pod 正常运行后，再处理下一个 Pod。
 
 滚动更新中，TiDB Operator 会自动处理 PD 和 TiKV 的 Leader 迁移。因此，在多节点的部署拓扑下（最小环境：PD \* 3、TiKV \* 3、TiDB \* 2），滚动更新 TiKV、PD 不会影响业务正常运行。对于有连接重试功能的客户端，滚动更新 TiDB 同样不会影响业务。
 
@@ -21,11 +25,24 @@ Kubernetes 提供了[滚动更新功能](https://kubernetes.io/docs/tutorials/ku
 > - 对于无法进行连接重试的客户端，**滚动更新 TiDB 会导致连接到被关闭节点的数据库的连接失效**，造成部分业务请求失败。对于这类业务，推荐在客户端添加重试功能，或者在低峰期进行 TiDB 的滚动更新操作。
 > - 升级前，请参考[文档](https://docs.pingcap.com/zh/tidb/stable/sql-statement-admin-show-ddl)确认没有正在进行的 DDL 操作。
 
+## 升级前准备
+
+1. 查阅[升级兼容性说明](https://docs.pingcap.com/zh/tidb/dev/upgrade-tidb-using-tiup#1-升级兼容性说明)，了解升级的注意事项。注意包括补丁版本在内的所有 TiDB 版本目前暂不支持降级或升级后回退。
+2. 查阅 [TiDB release notes](https://docs.pingcap.com/zh/tidb/dev/release-notes) 中各中间版本的兼容性变更。如果有任何变更影响到了你的升级，请采取相应的措施。
+
+    例如，从 TiDB v6.4.0 升级至 v6.5.2 时，需查阅以下各版本的兼容性变更：
+
+    - TiDB v6.5.0 release notes 中的[兼容性变更](https://docs.pingcap.com/zh/tidb/dev/release-6.5.0#兼容性变更)和[废弃功能](https://docs.pingcap.com/zh/tidb/dev/release-6.5.0#废弃功能)
+    - TiDB v6.5.1 release notes 中的[兼容性变更](https://docs.pingcap.com/zh/tidb/dev/release-6.5.1#兼容性变更)
+    - TiDB v6.5.2 release notes 中的[兼容性变更](https://docs.pingcap.com/zh/tidb/dev/release-6.5.2#兼容性变更)
+
+    如果从 v6.3.0 或之前版本升级到 v6.5.2，也需要查看中间版本 release notes 中提到的兼容性变更信息。
+
 ## 升级步骤
 
 > **注意：**
 >
-> TiDB（v4.0.2 起）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见[遥测](https://docs.pingcap.com/zh/tidb/stable/telemetry)。
+> TiDB（v4.0.2 起且发布于 2023 年 2 月 20 日前的版本）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见 [TiDB 遥测功能使用文档](https://docs.pingcap.com/zh/tidb/stable/telemetry)。自 2023 年 2 月 20 日起，新发布的 TiDB 版本默认不再收集使用情况信息分享给 PingCAP，参见 [TiDB 版本发布时间线](https://docs.pingcap.com/zh/tidb/stable/release-timeline)。
 
 1. 在 TidbCluster CR 中，修改待升级集群的各组件的镜像配置：
 

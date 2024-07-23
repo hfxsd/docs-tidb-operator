@@ -6,7 +6,7 @@ aliases: ['/docs/tidb-in-kubernetes/dev/backup-to-s3/']
 
 # Back up Data to S3-Compatible Storage Using Dumpling
 
-This document describes how to back up the data of the TiDB cluster in Kubernetes to an S3-compatible storage. "Backup" in this document refers to full backup (ad-hoc full backup and scheduled full backup).
+This document describes how to back up the data of the TiDB cluster on Kubernetes to an S3-compatible storage. "Backup" in this document refers to full backup (ad-hoc full backup and scheduled full backup).
 
 The backup method described in this document is implemented based on CustomResourceDefinition (CRD) in TiDB Operator v1.1 or later versions. For the underlying implementation, [Dumpling](https://docs.pingcap.com/tidb/stable/export-or-backup-using-dumpling) is used to get the logic backup of the TiDB cluster, and then this backup data is sent to the S3-compatible storage.
 
@@ -49,12 +49,12 @@ GRANT
 
 ### Step 1: Prepare for ad-hoc full backup
 
-1. Execute the following command to create the role-based access control (RBAC) resources in the `tidb-cluster` namespace based on [backup-rbac.yaml](https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/backup/backup-rbac.yaml):
+1. Execute the following command to create the role-based access control (RBAC) resources in the `tidb-cluster` namespace based on [backup-rbac.yaml](https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/backup/backup-rbac.yaml):
 
     {{< copyable "shell-regular" >}}
 
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/backup/backup-rbac.yaml -n tidb-cluster
+    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/backup/backup-rbac.yaml -n tidb-cluster
     ```
 
 2. Grant permissions to the remote storage.

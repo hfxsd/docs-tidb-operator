@@ -1,11 +1,11 @@
 ---
-title: Common Network Issues of TiDB in Kubernetes
-summary: Learn the common network issues of TiDB in Kubernetes and their solutions.
+title: Common Network Issues of TiDB on Kubernetes
+summary: Learn the common network issues of TiDB on Kubernetes and their solutions.
 ---
 
-# Common Network Issues of TiDB in Kubernetes
+# Common Network Issues of TiDB on Kubernetes
 
-This document describes the common network issues of TiDB in Kubernetes and their solutions.
+This document describes the common network issues of TiDB on Kubernetes and their solutions.
 
 ## Network connection failure between Pods
 
@@ -32,10 +32,10 @@ When you find some network connection issues among Pods from the log or monitori
     {{< copyable "shell-regular" >}}
 
     ```shell
-    tkctl debug -n ${namespace} ${pod_name}
+    kubectl -n ${namespace} exec -it ${pod_name} -- sh
     ```
 
-    After the remote shell is started, use the `dig` command to diagnose the DNS resolution. If the DNS resolution is abnormal, refer to [Debugging DNS Resolution](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/) for troubleshooting.
+    Use the `dig` command to diagnose the DNS resolution. If the DNS resolution is abnormal, refer to [Debugging DNS Resolution](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/) for troubleshooting.
 
     {{< copyable "shell-regular" >}}
 
@@ -53,15 +53,9 @@ When you find some network connection issues among Pods from the log or monitori
 
     - If the `ping` check fails, refer to [Debugging Kubernetes Networking](https://www.praqma.com/stories/debugging-kubernetes-networking/) for troubleshooting.
 
-    - If the `ping` check succeeds, continue to check whether the target port is open by using `telnet`:
+    - If the `ping` check succeeds, continue to check whether the target port is open by using `wget` or `curl`.
 
-        {{< copyable "shell-regular" >}}
-
-        ```shell
-        telnet ${TARGET_IP} ${TARGET_PORT}
-        ```
-
-        If the `telnet` check fails, check whether the port corresponding to the Pod is correctly exposed and whether the port of the application is correctly configured:
+        If the `wget` or `curl` check fails, check whether the port corresponding to the Pod is correctly exposed and whether the port of the application is correctly configured:
 
         {{< copyable "shell-regular" >}}
 

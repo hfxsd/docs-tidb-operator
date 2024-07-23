@@ -41,6 +41,7 @@ Pod 处于 Pending 状态，通常都是资源不满足导致的，比如：
 * 使用持久化存储的 PD、TiKV、TiFlash、Pump、Monitor、Backup、Restore Pod 使用的 PVC 的 StorageClass 不存在或 PV 不足
 * Kubernetes 集群中没有节点能满足 Pod 申请的 CPU 或内存
 * PD 或者 TiKV Replicas 数量和集群内节点数量不满足 tidb-scheduler 高可用调度策略
+* TiDB、TiProxy 等组件使用的证书没有配置
 
 此时，可以通过 `kubectl describe pod` 命令查看 Pending 的具体原因：
 
@@ -112,7 +113,7 @@ kubectl -n ${namespace} logs -f ${pod_name}
 kubectl -n ${namespace} logs -p ${pod_name}
 ```
 
-确认日志中的错误信息后，可以根据 [tidb-server 启动报错](https://pingcap.com/docs-cn/v3.0/how-to/troubleshoot/cluster-setup/#tidb-server-启动报错)，[tikv-server 启动报错](https://pingcap.com/docs-cn/v3.0/how-to/troubleshoot/cluster-setup/#tikv-server-启动报错)，[pd-server 启动报错](https://pingcap.com/docs-cn/v3.0/how-to/troubleshoot/cluster-setup/#pd-server-启动报错)中的指引信息进行进一步排查解决。
+确认日志中的错误信息后，可以根据 [tidb-server 启动报错](https://docs.pingcap.com/zh/tidb/stable/troubleshoot-tidb-cluster#tidb-server-%E5%90%AF%E5%8A%A8%E6%8A%A5%E9%94%99)，[tikv-server 启动报错](https://docs.pingcap.com/zh/tidb/stable/troubleshoot-tidb-cluster#tikv-server-%E5%90%AF%E5%8A%A8%E6%8A%A5%E9%94%99)，[pd-server 启动报错](https://docs.pingcap.com/zh/tidb/stable/troubleshoot-tidb-cluster#pd-server-%E5%90%AF%E5%8A%A8%E6%8A%A5%E9%94%99)中的指引信息进行进一步排查解决。
 
 ### cluster id mismatch
 

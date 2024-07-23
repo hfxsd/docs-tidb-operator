@@ -1,6 +1,6 @@
 ---
 title: Deploy Monitoring and Alerts for a TiDB Cluster
-summary: Learn how to monitor a TiDB cluster in Kubernetes.
+summary: Learn how to monitor a TiDB cluster on Kubernetes.
 aliases: ['/docs/tidb-in-kubernetes/dev/monitor-a-tidb-cluster/','/docs/tidb-in-kubernetes/dev/monitor-using-tidbmonitor/','/tidb-in-kubernetes/dev/monitor-using-tidbmonitor/']
 ---
 
@@ -12,7 +12,7 @@ This document describes how to monitor a TiDB cluster deployed using TiDB Operat
 
 You can monitor the TiDB cluster with Prometheus and Grafana. When you create a new TiDB cluster using TiDB Operator, you can deploy a separate monitoring system for the TiDB cluster. The monitoring system must run in the same namespace as the TiDB cluster, and includes two components: Prometheus and Grafana.
 
-For configuration details on the monitoring system, refer to [TiDB Cluster Monitoring](https://pingcap.com/docs/stable/how-to/monitor/monitor-a-cluster).
+For configuration details on the monitoring system, refer to [TiDB Cluster Monitoring](https://docs.pingcap.com/tidb/stable/deploy-monitoring-services).
 
 In TiDB Operator v1.1 or later versions, you can monitor a TiDB cluster on a Kubernetes cluster by using a simple Custom Resource (CR) file called `TidbMonitor`.
 
@@ -51,7 +51,7 @@ spec:
       type: NodePort
   initializer:
     baseImage: pingcap/tidb-monitor-initializer
-    version: v6.1.0
+    version: v8.1.0
   reloader:
     baseImage: pingcap/tidb-monitor-reloader
     version: v1.0.1
@@ -84,13 +84,13 @@ You can customize the Prometheus configuration by using a customized configurati
 2. Set `spec.prometheus.config.configMapRef.name` and `spec.prometheus.config.configMapRef.namespace` to the name and namespace of the customized ConfigMap respectively.
 3. Check if TidbMonitor has enabled [dynamic configuration](enable-monitor-dynamic-configuration.md). If not, you need to restart TidbMonitor's pod to reload the configuration.
 
-For the complete configuration, refer to the [tidb-operator example](https://github.com/pingcap/tidb-operator/blob/master/examples/monitor-with-externalConfigMap/prometheus/README.md).
+For the complete configuration, refer to the [tidb-operator example](https://github.com/pingcap/tidb-operator/blob/v1.6.0/examples/monitor-with-externalConfigMap/prometheus/README.md).
 
 #### Add extra options to the command
 
 To add extra options to the command that starts Prometheus, configure `spec.prometheus.config.commandOptions`.
 
-For the complete configuration, refer to the [tidb-operator example](https://github.com/pingcap/tidb-operator/blob/master/examples/monitor-with-externalConfigMap/prometheus/README.md).
+For the complete configuration, refer to the [tidb-operator example](https://github.com/pingcap/tidb-operator/blob/v1.6.0/examples/monitor-with-externalConfigMap/prometheus/README.md).
 
 > **Note:**
 >
@@ -173,7 +173,7 @@ spec:
       type: NodePort
   initializer:
     baseImage: pingcap/tidb-monitor-initializer
-    version: v6.1.0
+    version: v8.1.0
   reloader:
     baseImage: pingcap/tidb-monitor-reloader
     version: v1.0.1
@@ -232,7 +232,7 @@ spec:
         foo: "bar"
   initializer:
     baseImage: pingcap/tidb-monitor-initializer
-    version: v6.1.0
+    version: v8.1.0
   reloader:
     baseImage: pingcap/tidb-monitor-reloader
     version: v1.0.1
@@ -274,7 +274,7 @@ spec:
       type: ClusterIP
   initializer:
     baseImage: pingcap/tidb-monitor-initializer
-    version: v6.1.0
+    version: v8.1.0
   reloader:
     baseImage: pingcap/tidb-monitor-reloader
     version: v1.0.1
@@ -337,6 +337,7 @@ kind: TidbMonitor
 metadata:
   name: basic
 spec:
+  clusterScoped: true
   clusters:
     - name: ns1
       namespace: ns1
@@ -356,7 +357,7 @@ spec:
       type: NodePort
   initializer:
     baseImage: pingcap/tidb-monitor-initializer
-    version: v6.1.0
+    version: v8.1.0
   reloader:
     baseImage: pingcap/tidb-monitor-reloader
     version: v1.0.1
@@ -366,7 +367,7 @@ spec:
   imagePullPolicy: IfNotPresent
 ```
 
-For a complete configuration example, refer to [Example](https://github.com/pingcap/tidb-operator/tree/master/examples/monitor-multiple-cluster-non-tls) in the TiDB Operator repository.
+For a complete configuration example, refer to [Example](https://github.com/pingcap/tidb-operator/tree/v1.6.0/examples/monitor-multiple-cluster-non-tls) in the TiDB Operator repository.
 
 ### Monitor multiple clusters using Grafana
 

@@ -21,33 +21,12 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/deploy-on-azure-aks/']
 
 - 已根据[使用 Azure Kubernetes 服务上的 Azure 超级磁盘（预览）](https://docs.microsoft.com/zh-cn/azure/aks/use-ultra-disks) 创建可以使用超级磁盘的新集群或启用现有集群上的超级磁盘。
 - 已获取 [AKS 服务权限](https://docs.microsoft.com/zh-cn/azure/aks/concepts-identity#aks-service-permissions)。
-- 在 Kubernetes 版本 < 1.21 的集群中已安装 **aks-preview CLI 扩展**以使用超级磁盘，并在您的订阅中注册过 **EnableAzureDiskFileCSIDriver** 功能。
-
-    执行以下命令，安装 [aks-preview CLI 扩展](https://docs.microsoft.com/zh-cn/azure/aks/custom-node-configuration#install-aks-preview-cli-extension)：
-
-    {{< copyable "shell-regular" >}}
-
-    ```shell
-    az extension add --name aks-preview
-    ```
-
-    执行以下命令，在[您的 Azure 订阅](https://docs.microsoft.com/zh-cn/cli/azure/feature?view=azure-cli-latest#az_feature_register-optional-parameters)中注册 [EnableAzureDiskFileCSIDriver](https://docs.microsoft.com/zh-cn/azure/aks/csi-storage-drivers#install-csi-storage-drivers-on-a-new-cluster-with-version--121) 功能：
-
-    {{< copyable "shell-regular" >}}
-
-    ```shell
-    az feature register --name EnableAzureDiskFileCSIDriver --namespace Microsoft.ContainerService --subscription ${your-subscription-id}
-    ```
 
 ## 创建 AKS 集群和节点池
 
 TiDB 集群大部分组件使用 Azure 磁盘作为存储，根据 AKS 中的[最佳做法](https://docs.microsoft.com/zh-cn/azure/aks/operator-best-practices-cluster-isolation) ，推荐在创建 AKS 集群的时候确保每个节点池使用一个可用区（至少 3 个可用区）。
 
 ### 创建 [启用容器存储接口 (CSI) 驱动程序](https://docs.microsoft.com/zh-cn/azure/aks/csi-storage-drivers) 的 AKS 集群
-
-> **注意：**
->
-> 在 Kubernetes 版本 < 1.21 的集群中，需要额外使用 `--aks-custom-headers` 标志来启用 **EnableAzureDiskFileCSIDriver** 特性
 
 {{< copyable "shell-regular" >}}
 
@@ -60,8 +39,7 @@ az aks create \
     --vm-set-type VirtualMachineScaleSets \
     --load-balancer-sku standard \
     --node-count 3 \
-    --zones 1 2 3 \
-    --aks-custom-headers EnableAzureDiskFileCSIDriver=true
+    --zones 1 2 3
 ```
 
 ### 创建组件节点池
@@ -77,7 +55,6 @@ az aks create \
         --cluster-name ${clusterName} \
         --resource-group ${resourceGroup} \
         --zones 1 2 3 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 1 \
         --labels dedicated=admin
     ```
@@ -92,7 +69,6 @@ az aks create \
         --resource-group ${resourceGroup} \
         --node-vm-size ${nodeType} \
         --zones 1 2 3 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 3 \
         --labels dedicated=pd \
         --node-taints dedicated=pd:NoSchedule
@@ -108,7 +84,6 @@ az aks create \
         --resource-group ${resourceGroup} \
         --node-vm-size ${nodeType} \
         --zones 1 2 3 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 2 \
         --labels dedicated=tidb \
         --node-taints dedicated=tidb:NoSchedule
@@ -124,7 +99,6 @@ az aks create \
         --resource-group ${resourceGroup} \
         --node-vm-size ${nodeType} \
         --zones 1 2 3 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 3 \
         --labels dedicated=tikv \
         --node-taints dedicated=tikv:NoSchedule \
@@ -145,7 +119,6 @@ Azure AKS 集群使用 "尽量实现区域均衡" 在多个可用区间部署节
         --resource-group ${resourceGroup} \
         --node-vm-size ${nodeType} \
         --zones 1 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 1 \
         --labels dedicated=tikv \
         --node-taints dedicated=tikv:NoSchedule \
@@ -162,7 +135,6 @@ Azure AKS 集群使用 "尽量实现区域均衡" 在多个可用区间部署节
         --resource-group ${resourceGroup} \
         --node-vm-size ${nodeType} \
         --zones 2 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 1 \
         --labels dedicated=tikv \
         --node-taints dedicated=tikv:NoSchedule \
@@ -179,7 +151,6 @@ Azure AKS 集群使用 "尽量实现区域均衡" 在多个可用区间部署节
         --resource-group ${resourceGroup} \
         --node-vm-size ${nodeType} \
         --zones 3 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 1 \
         --labels dedicated=tikv \
         --node-taints dedicated=tikv:NoSchedule \
@@ -201,7 +172,8 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 # ...
 mountOptions:
-- nodelalloc,noatime
+  - nodelalloc
+  - noatime
 ```
 
 ## 部署 TiDB Operator
@@ -233,15 +205,23 @@ kubectl create namespace tidb-cluster
 {{< copyable "shell-regular" >}}
 
 ```shell
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/aks/tidb-cluster.yaml && \
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/aks/tidb-monitor.yaml
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aks/tidb-cluster.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aks/tidb-monitor.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/aks/tidb-dashboard.yaml
 ```
 
 如需了解更详细的配置信息或者进行自定义配置，请参考[配置 TiDB 集群](configure-a-tidb-cluster.md)
 
 > **注意：**
 >
-> 默认情况下，`tidb-cluster.yaml` 文件中 TiDB 服务的 LoadBalancer 配置为 "internal"。这意味着 LoadBalancer 只能在集群虚拟网络内部访问，而不能在外部访问。要通过 MySQL 协议访问 TiDB，您需要使用一个堡垒机进入集群节点或使用 `kubectl port-forward`。如果您想在互联网上公开访问 TiDB，并且知晓这样做的风险，您可以在 `tidb-cluster.yaml` 文件中将 LoadBalancer 的 "internal" 删除，默认创建的 LoadBalancer 将能够在外部访问。
+> 默认情况下，`tidb-cluster.yaml` 文件中 TiDB 服务的 LoadBalancer 配置为 "internal"。这意味着 LoadBalancer 只能在集群虚拟网络内部访问，而不能在外部访问。要通过 MySQL 协议访问 TiDB，您需要使用一个堡垒机进入集群节点或使用 `kubectl port-forward`。如果您想在互联网上公开访问 TiDB，并且知晓这样做的风险，您可以在 `tidb-cluster.yaml` 文件中将以下注释删除：
+> 
+> ```yaml
+> annotations:
+>   service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+> ```
+> 
+> 删除后，重新创建的 LoadBalancer 及其关联的 TiDB 服务将能够在外部访问。
 
 执行以下命令，在 AKS 集群中部署 TidbCluster 和 TidbMonitor CR。
 
@@ -353,7 +333,7 @@ MySQL [(none)]> show status;
 > **注意：**
 >
 > - [MySQL 8.0 默认认证插件](https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin)从 `mysql_native_password` 更新为 `caching_sha2_password`，因此如果使用 MySQL 8.0 客户端访问 TiDB 服务（TiDB 版本 < v4.0.7），并且用户账户有配置密码，需要显示指定 `--default-auth=mysql_native_password` 参数。
-> - TiDB（v4.0.2 起）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见 [TiDB 遥测功能使用文档](https://docs.pingcap.com/zh/tidb/stable/telemetry)。
+> - TiDB（v4.0.2 起且发布于 2023 年 2 月 20 日前的版本）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见 [TiDB 遥测功能使用文档](https://docs.pingcap.com/zh/tidb/stable/telemetry)。自 2023 年 2 月 20 日起，新发布的 TiDB 版本默认不再收集使用情况信息分享给 PingCAP，参见 [TiDB 版本发布时间线](https://docs.pingcap.com/zh/tidb/stable/release-timeline)。
 
 ## 访问 Grafana 监控
 
@@ -437,7 +417,6 @@ az aks nodepool scale \
         --resource-group ${resourceGroup} \
         --node-vm-size ${nodeType} \
         --zones 1 2 3 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 3 \
         --labels dedicated=tiflash \
         --node-taints dedicated=tiflash:NoSchedule
@@ -453,7 +432,6 @@ az aks nodepool scale \
         --resource-group ${resourceGroup} \
         --node-vm-size ${nodeType} \
         --zones 1 2 3 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 3 \
         --labels dedicated=ticdc \
         --node-taints dedicated=ticdc:NoSchedule
@@ -506,7 +484,7 @@ spec:
 
 最后使用 `kubectl -n tidb-cluster apply -f tidb-cluster.yaml` 更新 TiDB 集群配置。
 
-更多可参考 [API 文档](https://github.com/pingcap/tidb-operator/blob/master/docs/api-references/docs.md)和[集群配置文档](configure-a-tidb-cluster.md)完成 CR 文件配置。
+更多可参考 [API 文档](https://github.com/pingcap/tidb-operator/blob/v1.6.0/docs/api-references/docs.md)和[集群配置文档](configure-a-tidb-cluster.md)完成 CR 文件配置。
 
 ## 使用其他 Azure 磁盘类型
 
@@ -527,7 +505,8 @@ Azure Disk 支持多种磁盘类型。若需要低延迟、高吞吐，可以选
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
     mountOptions:
-    - nodelalloc,noatime
+      - nodelalloc
+      - noatime
     ```
 
     你可以根据实际需要额外配置[驱动参数](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/driver-parameters.md)。
@@ -569,7 +548,6 @@ Azure Disk 支持多种磁盘类型。若需要低延迟、高吞吐，可以选
         --resource-group ${resourceGroup} \
         --node-vm-size Standard_L8s_v2 \
         --zones 1 2 3 \
-        --aks-custom-headers EnableAzureDiskFileCSIDriver=true \
         --node-count 3 \
         --enable-ultra-ssd \
         --labels dedicated=tikv \
@@ -585,7 +563,7 @@ Azure Disk 支持多种磁盘类型。若需要低延迟、高吞吐，可以选
     {{< copyable "shell-regular" >}}
 
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/eks/local-volume-provisioner.yaml
+    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/eks/local-volume-provisioner.yaml
     ```
 
 3. 使用本地存储。

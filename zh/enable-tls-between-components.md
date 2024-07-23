@@ -9,7 +9,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
 本文主要描述了在 Kubernetes 上如何为 TiDB 集群组件间开启 TLS。TiDB Operator 从 v1.1 开始已经支持为 Kubernetes 上 TiDB 集群组件间开启 TLS。开启步骤为：
 
 1. 为即将被创建的 TiDB 集群的每个组件生成证书：
-    - 为 PD/TiKV/TiDB/Pump/Drainer/TiFlash/TiKV Importer/TiDB Lightning 组件分别创建一套 Server 端证书，保存为 Kubernetes Secret 对象：`${cluster_name}-${component_name}-cluster-secret`
+    - 为 PD/TiKV/TiDB/Pump/Drainer/TiFlash/TiProxy/TiKV Importer/TiDB Lightning 组件分别创建一套 Server 端证书，保存为 Kubernetes Secret 对象：`${cluster_name}-${component_name}-cluster-secret`
     - 为它们的各种客户端创建一套共用的 Client 端证书，保存为 Kubernetes Secret 对象：`${cluster_name}-cluster-client-secret`
 
     > **注意：**
@@ -156,6 +156,33 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
             ],
         ...
         ```
+
+        > **注意：**
+        >
+        > PD 从 v8.0.0 版本开始支持[微服务模式](https://docs.pingcap.com/zh/tidb/dev/pd-microservices)（实验特性）。如需部署 PD 微服务，并不需要为 PD 微服务的各个组件生成证书，只需要在 `pd-server.json` 文件的 `hosts` 字段中添加微服务相关的 hosts 配置即可。以 `scheduling` 微服务为例，你需要进行以下配置：
+        >
+        > ``` json
+        > ...
+        >     "CN": "TiDB",
+        >     "hosts": [
+        >       "127.0.0.1",
+        >       "::1",
+        >       "${cluster_name}-pd",
+        >       ...
+        >       "*.${cluster_name}-pd-peer.${namespace}.svc",
+        >       // 以下是为 `scheduling` 微服务添加的 hosts 配置
+        >       "${cluster_name}-scheduling",
+        >       "${cluster_name}-scheduling.${cluster_name}",
+        >       "${cluster_name}-scheduling.${cluster_name}.svc",
+        >       "${cluster_name}-scheduling-peer",
+        >       "${cluster_name}-scheduling-peer.${cluster_name}",
+        >       "${cluster_name}-scheduling-peer.${cluster_name}.svc",
+        >       "*.${cluster_name}-scheduling-peer",
+        >       "*.${cluster_name}-scheduling-peer.${cluster_name}",
+        >       "*.${cluster_name}-scheduling-peer.${cluster_name}.svc",
+        >     ],
+        > ...
+        > ```
 
         其中 `${cluster_name}` 为集群的名字，`${namespace}` 为 TiDB 集群部署的命名空间，用户也可以添加自定义 `hosts`。
 
@@ -401,6 +428,43 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
         cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=internal ticdc-server.json | cfssljson -bare ticdc-server
         ```
 
+    - TiProxy Server 端证书
+
+        首先生成默认的 `tiproxy-server.json` 文件：
+
+        ``` shell
+        cfssl print-defaults csr > tiproxy-server.json
+        ```
+
+        然后编辑这个文件，修改 `CN` 和 `hosts` 属性：
+
+        ``` json
+        ...
+            "CN": "TiDB",
+            "hosts": [
+              "127.0.0.1",
+              "::1",
+              "${cluster_name}-tiproxy",
+              "${cluster_name}-tiproxy.${namespace}",
+              "${cluster_name}-tiproxy.${namespace}.svc",
+              "${cluster_name}-tiproxy-peer",
+              "${cluster_name}-tiproxy-peer.${namespace}",
+              "${cluster_name}-tiproxy-peer.${namespace}.svc",
+              "*.${cluster_name}-tiproxy-peer",
+              "*.${cluster_name}-tiproxy-peer.${namespace}",
+              "*.${cluster_name}-tiproxy-peer.${namespace}.svc"
+            ],
+        ...
+        ```
+
+        其中 `${cluster_name}` 为集群的名字，`${namespace}` 为 TiDB 集群部署的命名空间，你也可以添加自定义 `hosts`。
+
+        最后生成 TiProxy Server 端证书：
+
+        ``` shell
+        cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=internal tiproxy-server.json | cfssljson -bare tiproxy-server
+        ```
+
     - TiFlash Server 端证书
 
         首先生成默认的 `tiflash-server.json` 文件：
@@ -596,6 +660,12 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
     kubectl create secret generic ${cluster_name}-ticdc-cluster-secret --namespace=${namespace} --from-file=tls.crt=ticdc-server.pem --from-file=tls.key=ticdc-server-key.pem --from-file=ca.crt=ca.pem
     ```
 
+    TiProxy 集群证书 Secret：
+
+    ``` shell
+    kubectl create secret generic ${cluster_name}-tiproxy-cluster-secret --namespace=${namespace} --from-file=tls.crt=tiproxy-server.pem --from-file=tls.key=tiproxy-server-key.pem --from-file=ca.crt=ca.pem
+    ```
+
     TiFlash 集群证书 Secret：
 
     {{< copyable "shell-regular" >}}
@@ -634,7 +704,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
 
 1. 安装 cert-manager。
 
-    请参考官网安装：[cert-manager installation in Kubernetes](https://docs.cert-manager.io/en/release-0.11/getting-started/install/kubernetes.html)。
+    请参考官网安装：[cert-manager installation on Kubernetes](https://docs.cert-manager.io/en/release-0.11/getting-started/install/kubernetes.html)。
 
 2. 创建一个 Issuer 用于给 TiDB 集群颁发证书。
 
@@ -1314,7 +1384,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
     spec:
      tlsCluster:
        enabled: true
-     version: v6.1.0
+     version: v8.1.0
      timezone: UTC
      pvReclaimPolicy: Retain
      pd:
@@ -1373,7 +1443,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
        version: 7.5.11
      initializer:
        baseImage: pingcap/tidb-monitor-initializer
-       version: v6.1.0
+       version: v8.1.0
      reloader:
        baseImage: pingcap/tidb-monitor-reloader
        version: v1.0.1
@@ -1384,6 +1454,35 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
     ```
 
     然后使用 `kubectl apply -f tidb-cluster.yaml` 来创建 TiDB 集群。
+
+    > **注意：**
+    >
+    > PD 从 v8.0.0 版本开始支持[微服务模式](https://docs.pingcap.com/zh/tidb/dev/pd-microservices)（实验特性），如需部署 PD 微服务，需要为各个微服务配置 `cert-allowed-cn`。以 Scheduling 服务为例，你需要进行以下配置：
+    >
+    > - 更新 `pd.mode` 为 `ms`
+    > - 为 `scheduling` 微服务配置 `security` 字段
+    >
+    > ```yaml
+    >   pd:
+    >    baseImage: pingcap/pd
+    >    maxFailoverCount: 0
+    >    replicas: 1
+    >    requests:
+    >     storage: "10Gi"
+    >    config:
+    >     security:
+    >       cert-allowed-cn:
+    >         - TiDB
+    >    mode: "ms"
+    >   pdms:
+    >   - name: "scheduling"
+    >     baseImage: pingcap/pd
+    >     replicas: 1
+    >     config:
+    >       security:
+    >         cert-allowed-cn:
+    >           - TiDB
+    > ```
 
 2. 创建 Drainer 组件并开启 TLS 以及 CN 验证。
 

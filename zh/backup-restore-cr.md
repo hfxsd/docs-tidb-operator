@@ -22,12 +22,22 @@ summary: 介绍用于备份与恢复的 Custom Resource (CR) 资源的各字段�
         - 如果指定了镜像但未指定版本，例如 `.spec.toolImage: private/registry/br`，那么使用镜像 `private/registry/br:${tikv_version}` 进行备份。
     - 使用 Dumpling 备份时，可以用该字段指定 Dumpling 的版本：
         - 如果指定了 Dumpling 的版本，例如 `spec.toolImage: pingcap/dumpling:v5.3.0`，那么使用指定的版本镜像进行备份。
-        - 如果未指定，默认使用 [Backup Manager Dockerfile](https://github.com/pingcap/tidb-operator/blob/master/images/tidb-backup-manager/Dockerfile) 文件中 `TOOLKIT_VERSION` 指定的 Dumpling 版本进行备份。
+        - 如果未指定，默认使用 [Backup Manager Dockerfile](https://github.com/pingcap/tidb-operator/blob/v1.6.0/images/tidb-backup-manager/Dockerfile) 文件中 `TOOLKIT_VERSION` 指定的 Dumpling 版本进行备份。
 
 * `.spec.backupType`：指定 Backup 类型，该字段仅在使用 BR 备份时有效，目前支持以下三种类型，可以结合 `.spec.tableFilter` 配置表库过滤规则：
     * `full`：对 TiDB 集群所有的 database 数据执行备份。
     * `db`：对 TiDB 集群一个 database 的数据执行备份。
     * `table`：对 TiDB 集群中指定表的数据执行备份。
+
+* `.spec.backupMode`：指定 Backup 的模式，默认为 `snapshot`，即基于 KV 层的快照备份。该字段仅在备份时有效，目前支持以下三种类型：
+    * `snapshot`：基于 KV 层的快照备份。
+    * `volume-snapshot`：基于卷快照的备份。
+    * `log`：从 KV 层备份实时数据变更日志数据。
+
+* `.spec.restoreMode`：指定 Restore 的模式，默认为 `snapshot`，即基于 KV 层的快照恢复。该字段仅在恢复时有效，目前支持以下三种类型：
+    * `snapshot`：基于 KV 层的快照恢复。
+    * `volume-snapshot`：基于卷快照的 TiDB 集群恢复。
+    * `pitr`：基于备份的快照数据和日志数据将 TiDB 集群数据恢复到指定时间点。
 
 * `.spec.tikvGCLifeTime`：备份中的临时 `tikv_gc_life_time` 时间设置，默认为 `72h`。
 
@@ -99,6 +109,11 @@ summary: 介绍用于备份与恢复的 Custom Resource (CR) 资源的各字段�
     > - "!db.table"
     > ```
 
+* `.spec.backoffRetryPolicy`：指定备份的 Job/Pod 发生非正常失败（如节点资源不足被 Kubernetes 杀死）时的重试策略。这个策略目前只适用于 `snapshot` 备份。
+    * `minRetryDuration`：发现异常失败后的最小重试间隔，重试间隔随失败次数增加，`RetryDuration` = `minRetryDuration` << (`retryNum` -1)。时间设置格式参考 [`func ParseDuration`](https://golang.org/pkg/time/#ParseDuration)，默认 300s。
+    * `maxRetryTimes`：最大重试次数，默认 2。
+    * `retryTimeout`：重试超时时间，从首次发现异常失败开始计算。时间设置格式参考 [`func ParseDuration`](https://golang.org/pkg/time/#ParseDuration)，默认 30m。
+
 ### BR 字段介绍
 
 * `.spec.br.cluster`：代表需要备份的集群名字。
@@ -109,7 +124,7 @@ summary: 介绍用于备份与恢复的 Custom Resource (CR) 资源的各字段�
 * `.spec.br.rateLimit`：是否对流量进行限制。单位为 MB/s，例如设置为 `4` 代表限速 4 MB/s，默认不限速。
 * `.spec.br.checksum`：是否在备份结束之后对文件进行验证。默认为 `true`。
 * `.spec.br.timeAgo`：备份 timeAgo 以前的数据，默认为空（备份当前数据），[支持](https://golang.org/pkg/time/#ParseDuration) "1.5h"，"2h45m" 等数据。
-* `.spec.br.sendCredToTikv`：BR 进程是否将自己的 AWS 权限、GCP 权限或者 Azure 权限传输给 TiKV 进程。默认为 `true`。
+* `.spec.br.sendCredToTikv`：BR 进程是否将自己的 AWS 权限、Google Cloud 权限或者 Azure 权限传输给 TiKV 进程。默认为 `true`。
 * `.spec.br.onLine`：restore 时是否启用[在线恢复功能](https://docs.pingcap.com/zh/tidb/stable/use-br-command-line-tool#在线恢复实验性功能)。
 * `.spec.br.options`：BR 工具支持的额外参数，需要以字符串数组的形式传入。自 v1.1.6 版本起支持该参数。可用于指定 `lastbackupts` 以进行增量备份。
 
@@ -163,7 +178,7 @@ summary: 介绍用于备份与恢复的 Custom Resource (CR) 资源的各字段�
 
 ### GCS 存储字段介绍
 
-* `.spec.gcs.projectId`：代表 GCP 上用户项目的唯一标识。具体获取该标识的方法可参考 [GCP 官方文档](https://cloud.google.com/resource-manager/docs/creating-managing-projects)。
+* `.spec.gcs.projectId`：代表 Google Cloud 上用户项目的唯一标识。具体获取该标识的方法可参考 [Google Cloud 官方文档](https://cloud.google.com/resource-manager/docs/creating-managing-projects)。
 * `.spec.gcs.location`：指定 GCS bucket 所在的区域，例如 `us-west2`。
 * `.spec.gcs.path`：指定备份文件在远端存储的存储路径，该字段仅在使用 Dumpling 备份或 Lightning 恢复时有效，例如 `gcs://test1-demo1/backup-2019-11-11T16:06:05Z.tgz`。
 * `.spec.gcs.secretName`：指定存储 GCS 用户账号认证信息的 Secret 名称。
@@ -232,7 +247,7 @@ summary: 介绍用于备份与恢复的 Custom Resource (CR) 资源的各字段�
 * `.spec.metadata.namespace`：`Restore` CR 所在的 namespace。
 * `.spec.toolImage`：用于指定 `Restore` 使用的工具镜像。TiDB Operator 从 v1.1.9 版本起支持这项配置。
     - 使用 BR 恢复时，可以用该字段指定 BR 的版本。例如，`spec.toolImage: pingcap/br:v5.3.0`。如果不指定，默认使用 `pingcap/br:${tikv_version}` 进行恢复。
-    - 使用 Lightning 恢复时，可以用该字段指定 Lightning 的版本，例如`spec.toolImage: pingcap/lightning:v5.3.0`。如果不指定，默认使用 [Backup Manager Dockerfile](https://github.com/pingcap/tidb-operator/blob/master/images/tidb-backup-manager/Dockerfile) 文件中 `TOOLKIT_VERSION` 指定的 Lightning 版本进行恢复。
+    - 使用 Lightning 恢复时，可以用该字段指定 Lightning 的版本，例如`spec.toolImage: pingcap/lightning:v5.3.0`。如果不指定，默认使用 [Backup Manager Dockerfile](https://github.com/pingcap/tidb-operator/blob/v1.6.0/images/tidb-backup-manager/Dockerfile) 文件中 `TOOLKIT_VERSION` 指定的 Lightning 版本进行恢复。
 
 * `.spec.backupType`：指定 Restore 类型，该字段仅在使用 BR 恢复时有效，目前支持以下三种类型，可以结合 `.spec.tableFilter` 配置表库过滤规则：
     * `full`：对 TiDB 集群所有的 database 数据执行备份。
@@ -308,9 +323,17 @@ summary: 介绍用于备份与恢复的 Custom Resource (CR) 资源的各字段�
 
 ## BackupSchedule CR 字段介绍
 
-`backupSchedule` 的配置由两部分组成。一部分是 `backupSchedule` 独有的配置，另一部分是 `backupTemplate`。`backupTemplate` 指定集群及远程存储相关的配置，字段和 Backup CR 中的 `spec` 一样，详细介绍可参考 [Backup CR 字段介绍](#backup-cr-字段介绍)。下面介绍 `backupSchedule` 独有的配置项：
+`backupSchedule` 的配置由三部分组成。快照备份相关配置 `backupTemplate`，日志备份相关配置`logBackupTemplate`，`backupSchedule` 独有的配置。
 
-+ `.spec.maxBackups`：一种备份保留策略，决定定时备份最多可保留的备份个数。超过该数目，就会将过时的备份删除。如果将该项设置为 `0`，则表示保留所有备份。
-+ `.spec.maxReservedTime`：一种备份保留策略，按时间保留备份。例如将该参数设置为 `24h`，表示只保留最近 24 小时内的备份条目。超过这个时间的备份都会被清除。时间设置格式参考 [`func ParseDuration`](https://golang.org/pkg/time/#ParseDuration)。如果同时设置 `.spec.maxBackups` 和 `.spec.maxReservedTime`，则以 `.spec.maxReservedTime` 为准。
-+ `.spec.schedule`：Cron 的时间调度格式。具体格式可参考 [Cron](https://en.wikipedia.org/wiki/Cron)。
-+ `.spec.pause`：是否暂停定时备份，默认为 `false`。如果将该值设置为 `true`，表示暂停定时备份，此时即使到了指定时间点，也不会进行备份。在定时备份暂停期间，备份 Garbage Collection (GC) 仍然正常进行。如需重新开启定时全量备份，将 `true` 改为 `false`。
++ `backupTemplate`：快照备份相关配置。指定快照备份集群及远程存储相关的配置，字段和 Backup CR 中的 `spec` 一样，详细介绍可参考 [Backup CR 字段介绍](#backup-cr-字段介绍)。
++ `logBackupTemplate`：日志备份相关配置。指定日志备份集群及远程存储相关的配置，字段和 Backup CR 中的 `spec` 一样，详细介绍可参考 [Backup CR 字段介绍](#backup-cr-字段介绍)，日志备份随 `backupSchedule` 创建、删除，且根据 `.spec.maxReservedTime` 进行回收。日志备份名称在 `status.logBackup` 中保存。
+
+    > **注意：**
+    >
+    > 若删除日志备份数据，需要先停止日志备份任务，避免由于未停止 TiKV 中的日志备份任务，造成资源浪费或者后续无法重新开启日志备份。
+  
++ `backupSchedule` 独有的配置：
+    + `.spec.maxBackups`：一种备份保留策略，决定定时备份最多可保留的备份个数。超过该数目，就会将过时的备份删除。如果将该项设置为 `0`，则表示保留所有备份。
+    + `.spec.maxReservedTime`：一种备份保留策略，按时间保留备份。例如将该参数设置为 `24h`，表示只保留最近 24 小时内的备份条目。超过这个时间的备份都会被清除。时间设置格式参考 [`func ParseDuration`](https://golang.org/pkg/time/#ParseDuration)。如果同时设置 `.spec.maxBackups` 和 `.spec.maxReservedTime`，则以 `.spec.maxReservedTime` 为准。
+    + `.spec.schedule`：Cron 的时间调度格式。具体格式可参考 [Cron](https://en.wikipedia.org/wiki/Cron)。
+    + `.spec.pause`：是否暂停定时备份，默认为 `false`。如果将该值设置为 `true`，表示暂停定时备份，此时即使到了指定时间点，也不会进行备份。在定时备份暂停期间，备份 Garbage Collection (GC) 仍然正常进行。如需重新开启定时快照备份，将 `true` 改为 `false`。由于目前日志备份暂不支持暂停，因此该配置对日志备份无效。

@@ -1,14 +1,14 @@
 ---
-title: 在 GCP GKE 上部署 TiDB 集群
-summary: 了解如何在 GCP GKE 上部署 TiDB 集群。
+title: 在 Google Cloud GKE 上部署 TiDB 集群
+summary: 了解如何在 Google Cloud GKE 上部署 TiDB 集群。
 aliases: ['/docs-cn/tidb-in-kubernetes/dev/deploy-on-gcp-gke/']
 ---
 
-# 在 GCP GKE 上部署 TiDB 集群
+# 在 Google Cloud GKE 上部署 TiDB 集群
 
 <!-- markdownlint-disable MD029 -->
 
-本文介绍了如何部署 GCP Google Kubernetes Engine (GKE) 集群，并在其中部署 TiDB 集群。
+本文介绍了如何部署 Google Kubernetes Engine (GKE) 集群，并在其中部署 TiDB 集群。
 
 如果需要部署 TiDB Operator 及 TiDB 集群到自托管 Kubernetes 环境，请参考[部署 TiDB Operator](deploy-tidb-operator.md)及[部署 TiDB 集群](deploy-on-general-kubernetes.md)等文档。
 
@@ -17,7 +17,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/deploy-on-gcp-gke/']
 部署前，请确认已完成以下环境准备：
 
 * [Helm 3](https://helm.sh/docs/intro/install/)：用于安装 TiDB Operator
-* [gcloud](https://cloud.google.com/sdk/gcloud)：用于创建和管理 GCP 服务的命令行工具
+* [gcloud](https://cloud.google.com/sdk/gcloud)：用于创建和管理 Google Cloud 服务的命令行工具
 * 完成 [GKE 快速入门](https://cloud.google.com/kubernetes-engine/docs/quickstart#before-you-begin) 中的**准备工作** (Before you begin)
 
     该教程包含以下内容：
@@ -29,20 +29,20 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/deploy-on-gcp-gke/']
 
 * 推荐机型：出于性能考虑，推荐以下机型：
     * PD 所在节点：`n2-standard-4`
-    * TiDB 所在节点：`n2-standard-8`
-    * TiKV 或 TiFlash 所在节点：`n2-highmem-8`
+    * TiDB 所在节点：`n2-standard-16`
+    * TiKV 或 TiFlash 所在节点：`n2-standard-16`
 * 推荐存储：推荐 TiKV 与 TiFlash 使用 [pd-ssd](https://cloud.google.com/compute/docs/disks/performance#type_comparison) 类型的存储。
 
-## 配置 GCP 服务
+## 配置 Google Cloud 服务
 
 {{< copyable "shell-regular" >}}
 
 ```shell
-gcloud config set core/project <gcp-project>
-gcloud config set compute/region <gcp-region>
+gcloud config set core/project <google-cloud-project>
+gcloud config set compute/region <google-cloud-region>
 ```
 
-使用以上命令，设置好你的 GCP 项目和默认的区域。
+使用以上命令，设置好你的 Google Cloud 项目和默认的区域。
 
 ## 创建 GKE 集群和节点池
 
@@ -96,7 +96,8 @@ allowVolumeExpansion: true
 parameters:
   type: pd-ssd
 mountOptions:
-  - nodelalloc,noatime
+  - nodelalloc
+  - noatime
 ```
 
 > **注意：**
@@ -105,7 +106,7 @@ mountOptions:
 
 ### 使用本地存储
 
-请使用[区域永久性磁盘](https://cloud.google.com/compute/docs/disks#pdspecs)作为生产环境的存储类型。如果需要模拟测试裸机部署的性能，可以使用 GCP 部分实例类型提供的[本地存储卷](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/local-ssd)。可以为 TiKV 节点池选择这一类型的实例，以便提供更高的 IOPS 和低延迟。
+请使用[区域永久性磁盘](https://cloud.google.com/compute/docs/disks#pdspecs)作为生产环境的存储类型。如果需要模拟测试裸机部署的性能，可以使用 Google Cloud 部分实例类型提供的[本地存储卷](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/local-ssd)。可以为 TiKV 节点池选择这一类型的实例，以便提供更高的 IOPS 和低延迟。
 
 > **注意：**
 >
@@ -130,7 +131,7 @@ mountOptions:
     {{< copyable "shell-regular" >}}
 
     ```shell
-    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/gke/local-ssd-provision/local-ssd-provision.yaml
+    kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/gke/local-ssd-provision/local-ssd-provision.yaml
     ```
 
 3. 使用本地存储。
@@ -143,7 +144,7 @@ mountOptions:
 
 ## 部署 TiDB 集群和监控
 
-下面介绍如何在 GCP GKE 上部署 TiDB 集群和监控组件。
+下面介绍如何在 GKE 上部署 TiDB 集群和监控组件。
 
 ### 创建 namespace
 
@@ -166,8 +167,9 @@ kubectl create namespace tidb-cluster
 {{< copyable "shell-regular" >}}
 
 ```shell
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/gcp/tidb-cluster.yaml &&
-curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/master/examples/gcp/tidb-monitor.yaml
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/gcp/tidb-cluster.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/gcp/tidb-monitor.yaml && \
+curl -O https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/examples/gcp/tidb-dashboard.yaml
 ```
 
 如需了解更详细的配置信息或者进行自定义配置，请参考[配置 TiDB 集群](configure-a-tidb-cluster.md)
@@ -269,9 +271,9 @@ gcloud compute instances create bastion \
     $ mysql --comments -h 10.128.15.243 -P 4000 -u root
     Welcome to the MariaDB monitor.  Commands end with ; or \g.
     Your MySQL connection id is 7823
-    Server version: 5.7.25-TiDB-v6.1.0 TiDB Server (Apache License 2.0) Community Edition, MySQL 5.7 compatible
+    Server version: 8.0.11-TiDB-v8.1.0 TiDB Server (Apache License 2.0) Community Edition, MySQL 8.0 compatible
 
-    Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+    Copyright (c) 2000, 2022, Oracle and/or its affiliates.
 
     Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
@@ -292,7 +294,7 @@ gcloud compute instances create bastion \
     > **注意：**
     >
     > * [MySQL 8.0 默认认证插件](https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin)从 `mysql_native_password` 更新为 `caching_sha2_password`，因此如果使用 MySQL 8.0 客户端访问 TiDB 服务（TiDB 版本 < v4.0.7），并且用户账户有配置密码，需要显式指定 `--default-auth=mysql_native_password` 参数。
-    > * TiDB（v4.0.2 起）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见[遥测](https://docs.pingcap.com/zh/tidb/stable/telemetry)。
+    > * TiDB（v4.0.2 起且发布于 2023 年 2 月 20 日前的版本）默认会定期收集使用情况信息，并将这些信息分享给 PingCAP 用于改善产品。若要了解所收集的信息详情及如何禁用该行为，请参见 [TiDB 遥测功能使用文档](https://docs.pingcap.com/zh/tidb/stable/telemetry)。自 2023 年 2 月 20 日起，新发布的 TiDB 版本默认不再收集使用情况信息分享给 PingCAP，参见 [TiDB 版本发布时间线](https://docs.pingcap.com/zh/tidb/stable/release-timeline)。
 
 ### 访问 Grafana 监控
 
@@ -319,6 +321,26 @@ basic-grafana            LoadBalancer   10.15.255.169   34.123.168.114   3000:30
 > **注意：**
 >
 > Grafana 默认用户名和密码均为 admin。
+
+### 访问 TiDB Dashboard Web UI
+
+先获取 TiDB Dashboard 的 LoadBalancer 域名：
+
+{{< copyable "shell-regular" >}}
+
+```shell
+kubectl -n tidb-cluster get svc basic-tidb-dashboard-exposed
+```
+
+示例：
+
+```
+$ kubectl -n tidb-cluster get svc basic-tidb-dashboard-exposed
+NAME                     TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)               AGE
+basic-tidb-dashboard-exposed            LoadBalancer   10.15.255.169   34.123.168.114   12333:30657/TCP        35m
+```
+
+你可以通过浏览器访问 `${EXTERNAL-IP}:12333` 地址查看 TiDB Dashboard 监控指标。
 
 ## 升级 TiDB 集群
 
@@ -425,4 +447,4 @@ spec:
 
 最后使用 `kubectl -n tidb-cluster apply -f tidb-cluster.yaml` 更新 TiDB 集群配置。
 
-更多可参考 [API 文档](https://github.com/pingcap/tidb-operator/blob/master/docs/api-references/docs.md)和[集群配置文档](configure-a-tidb-cluster.md)完成 CR 文件配置。
+更多可参考 [API 文档](https://github.com/pingcap/tidb-operator/blob/v1.6.0/docs/api-references/docs.md)和[集群配置文档](configure-a-tidb-cluster.md)完成 CR 文件配置。

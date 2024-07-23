@@ -1,12 +1,13 @@
 <!-- markdownlint-disable MD007 -->
 <!-- markdownlint-disable MD041 -->
 
+- [TiDB on Kubernetes Docs](https://docs.pingcap.com/tidb-in-kubernetes/dev)
 - Introduction
   - [Overview](tidb-operator-overview.md)
-  - [What's New in v1.3](whats-new-in-v1.3.md)
+  - [What's New in v1.6](whats-new-in-v1.6.md)
 - [Get Started](get-started.md)
 - Deploy
-  - In Self-Managed Kubernetes
+  - On Self-Managed Kubernetes
     - [Prerequisites](prerequisites.md)
     - [Configure Storage Class](configure-storage-class.md)
     - [Deploy TiDB Operator](deploy-tidb-operator.md)
@@ -14,16 +15,16 @@
     - [Deploy a TiDB Cluster](deploy-on-general-kubernetes.md)
     - [Initialize a TiDB Cluster](initialize-a-cluster.md)
     - [Access a TiDB Cluster](access-tidb.md)
-  - In Public Cloud Kubernetes
+  - On Public Cloud Kubernetes
     - [Amazon EKS](deploy-on-aws-eks.md)
-    - [GCP GKE](deploy-on-gcp-gke.md)
+    - [Google Cloud GKE](deploy-on-gcp-gke.md)
     - [Azure AKS](deploy-on-azure-aks.md)
-    - [Alibaba Cloud ACK](deploy-on-alibaba-cloud.md)
   - [Deploy TiDB on ARM64 Machines](deploy-cluster-on-arm64.md)
   - [Deploy TiFlash to Explore TiDB HTAP](deploy-tiflash.md)
+  - [Deploy TiProxy Load Balancer](deploy-tiproxy.md)
   - Deploy TiDB Across Multiple Kubernetes Clusters
     - [Build Multiple Interconnected AWS EKS Clusters](build-multi-aws-eks.md)
-    - [Build Multiple Interconnected GCP GKE Clusters](build-multi-gcp-gke.md)
+    - [Build Multiple Interconnected GKE Clusters](build-multi-gcp-gke.md)
     - [Deploy TiDB Across Multiple Kubernetes Clusters](deploy-tidb-cluster-across-multiple-kubernetes.md)
   - [Deploy a Heterogeneous TiDB Cluster](deploy-heterogeneous-tidb-cluster.md)
   - [Deploy TiCDC](deploy-ticdc.md)
@@ -32,6 +33,7 @@
   - [Deploy Monitoring and Alerts for TiDB](monitor-a-tidb-cluster.md)
   - [Monitor and Diagnose TiDB Using TiDB Dashboard](access-dashboard.md)
   - [Aggregate Monitoring Data of Multiple TiDB Clusters](aggregate-multiple-cluster-monitor-data.md)
+  - [Monitor a TiDB Cluster across Multiple Kubernetes Clusters](deploy-tidb-monitor-across-multiple-kubernetes.md)
   - [Enable Dynamic Configuration for TidbMonitor](enable-monitor-dynamic-configuration.md)
   - [Enable Shards for TidbMonitor](enable-monitor-shards.md)
 - Migrate
@@ -74,13 +76,20 @@
     - Persistent Volumes
       - [Back Up Data](backup-to-pv-using-br.md)
       - [Restore Data](restore-from-pv-using-br.md)
+    - Snapshot Backup and Restore across Multiple Kubernetes
+      - [BR Federation Architecture](br-federation-architecture.md)
+      - [Deploy BR Federation](deploy-br-federation.md)
+      - [Back Up Data Using EBS Snapshots](backup-by-ebs-snapshot-across-multiple-kubernetes.md)
+      - [Restore Data from EBS Snapshots](restore-from-ebs-snapshot-across-multiple-kubernetes.md)
+      - [FAQs](backup-restore-by-ebs-snapshot-faq.md)
   - Maintain
     - [Restart a TiDB Cluster](restart-a-tidb-cluster.md)
     - [Destroy a TiDB Cluster](destroy-a-tidb-cluster.md)
     - [View TiDB Logs](view-logs.md)
     - [Modify TiDB Cluster Configuration](modify-tidb-configuration.md)
     - [Configure Automatic Failover](use-auto-failover.md)
-    - [Pause Sync of TiDB Cluster](pause-sync-of-tidb-cluster.md)
+    - [Pause Sync of a TiDB Cluster](pause-sync-of-tidb-cluster.md)
+    - [Suspend a TiDB Cluster](suspend-tidb-cluster.md)
     - [Maintain Different TiDB Clusters Separately Using Multiple TiDB Operator](deploy-multiple-tidb-operator.md)
     - [Maintain Kubernetes Nodes](maintain-a-kubernetes-node.md)
     - [Migrate from Helm 2 to Helm 3](migrate-to-helm3.md)
@@ -104,11 +113,10 @@
     - [Advanced StatefulSet Controller](advanced-statefulset.md)
     - [Admission Controller](enable-admission-webhook.md)
   - [Sysbench Performance Test](benchmark-sysbench.md)
-  - [API References](https://github.com/pingcap/tidb-operator/blob/master/docs/api-references/docs.md)
+  - [API References](https://github.com/pingcap/tidb-operator/blob/v1.6.0/docs/api-references/docs.md)
   - [Cheat Sheet](cheat-sheet.md)
   - [Required RBAC Rules](tidb-operator-rbac.md)
   - Tools
-    - [tkctl](use-tkctl.md)
     - [TiDB Toolkit](tidb-toolkit.md)
   - Configure
     - [Configure tidb-drainer Chart](configure-tidb-binlog-drainer.md)
@@ -116,7 +124,32 @@
   - [Monitoring and Alert on Kubernetes](monitor-kubernetes.md)
   - [PingCAP Clinic Diagnostic Data](clinic-data-collection.md)
 - Release Notes
+  - v1.6
+    - [1.6 GA](releases/release-1.6.0.md)
+    - [1.6.0-beta.1](releases/release-1.6.0-beta.1.md)
+  - v1.5
+    - [1.5.3](releases/release-1.5.3.md)
+    - [1.5.2](releases/release-1.5.2.md)
+    - [1.5.1](releases/release-1.5.1.md)
+    - [1.5 GA](releases/release-1.5.0.md)
+    - [1.5.0-beta.1](releases/release-1.5.0-beta.1.md)
+  - v1.4
+    - [1.4.7](releases/release-1.4.7.md)
+    - [1.4.6](releases/release-1.4.6.md)
+    - [1.4.5](releases/release-1.4.5.md)
+    - [1.4.4](releases/release-1.4.4.md)
+    - [1.4.3](releases/release-1.4.3.md)
+    - [1.4.2](releases/release-1.4.2.md)
+    - [1.4.1](releases/release-1.4.1.md)
+    - [1.4 GA](releases/release-1.4.0.md)
+    - [1.4.0-beta.3](releases/release-1.4.0-beta.3.md)
+    - [1.4.0-beta.2](releases/release-1.4.0-beta.2.md)
+    - [1.4.0-beta.1](releases/release-1.4.0-beta.1.md)
+    - [1.4.0-alpha.1](releases/release-1.4.0-alpha.1.md)
   - v1.3
+    - [1.3.10](releases/release-1.3.10.md)
+    - [1.3.9](releases/release-1.3.9.md)
+    - [1.3.8](releases/release-1.3.8.md)
     - [1.3.7](releases/release-1.3.7.md)
     - [1.3.6](releases/release-1.3.6.md)
     - [1.3.5](releases/release-1.3.5.md)

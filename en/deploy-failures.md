@@ -1,11 +1,11 @@
 ---
-title: Common Deployment Failures of TiDB in Kubernetes
-summary: Learn the common deployment failures of TiDB in Kubernetes and their solutions.
+title: Common Deployment Failures of TiDB on Kubernetes
+summary: Learn the common deployment failures of TiDB on Kubernetes and their solutions.
 ---
 
-# Common Deployment Failures of TiDB in Kubernetes
+# Common Deployment Failures of TiDB on Kubernetes
 
-This document describes the common deployment failures of TiDB in Kubernetes and their solutions.
+This document describes the common deployment failures of TiDB on Kubernetes and their solutions.
 
 ## The Pod is not created normally
 
@@ -38,12 +38,11 @@ kubectl describe restores -n ${namespace} ${restore_name}
 The Pending state of a Pod is usually caused by conditions of insufficient resources, for example:
 
 - The `StorageClass` of the PVC used by PD, TiKV, TiFlash, Pump, Monitor, Backup, and Restore Pods does not exist or the PV is insufficient.
-- No nodes in the Kubernetes cluster can satisfy the CPU or memory resources requested by the Pod
-- The number of TiKV or PD replicas and the number of nodes in the cluster do not satisfy the high availability scheduling policy of tidb-scheduler
+- No nodes in the Kubernetes cluster can satisfy the CPU or memory resources requested by the Pod.
+- The number of TiKV or PD replicas and the number of nodes in the cluster do not satisfy the high availability scheduling policy of tidb-scheduler.
+- The certificates used by TiDB or TiProxy components are not configured.
 
 You can check the specific reason for Pending by using the `kubectl describe pod` command:
-
-{{< copyable "shell-regular" >}}
 
 ```shell
 kubectl describe po -n ${namespace} ${pod_name}
@@ -111,7 +110,7 @@ kubectl -n ${namespace} logs -f ${pod_name}
 kubectl -n ${namespace} logs -p ${pod_name}
 ```
 
-After checking the error messages in the log, you can refer to [Cannot start `tidb-server`](https://pingcap.com/docs/stable/how-to/troubleshoot/cluster-setup#cannot-start-tidb-server), [Cannot start `tikv-server`](https://pingcap.com/docs/stable/how-to/troubleshoot/cluster-setup#cannot-start-tikv-server), and [Cannot start `pd-server`](https://pingcap.com/docs/stable/how-to/troubleshoot/cluster-setup#cannot-start-pd-server) for further troubleshooting.
+After checking the error messages in the log, you can refer to [Cannot start `tidb-server`](https://docs.pingcap.com/tidb/stable/troubleshoot-tidb-cluster#cannot-start-tidb-server), [Cannot start `tikv-server`](https://docs.pingcap.com/tidb/stable/troubleshoot-tidb-cluster#cannot-start-tikv-server), and [Cannot start `pd-server`](https://docs.pingcap.com/tidb/stable/troubleshoot-tidb-cluster#cannot-start-pd-server) for further troubleshooting.
 
 ### "cluster id mismatch"
 
@@ -168,6 +167,6 @@ spec:
 
 This failure occurs because there is something wrong with the `nslookup` in the base image (see detail in [#4379](https://github.com/pingcap/tidb-operator/pull/4379)). After configuring `startUpScriptVersion` to `v1`, TiDB Operator uses `dig` to check DNS instead of using `nslookup`.
 
-### Other causes 
+### Other causes
 
 If you cannot confirm the cause from the log and `ulimit` is also a normal value, troubleshoot the issue by [using the debug mode](tips.md#use-the-debug-mode).
