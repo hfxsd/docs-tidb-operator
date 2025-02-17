@@ -1399,7 +1399,7 @@ In this step, you need to perform the following operations:
     spec:
      tlsCluster:
        enabled: true
-     version: v8.1.0
+     version: v8.5.0
      timezone: UTC
      pvReclaimPolicy: Retain
      pd:
@@ -1458,7 +1458,7 @@ In this step, you need to perform the following operations:
        version: 7.5.11
      initializer:
        baseImage: pingcap/tidb-monitor-initializer
-       version: v8.1.0
+       version: v8.5.0
      reloader:
        baseImage: pingcap/tidb-monitor-reloader
        version: v1.0.1
@@ -1560,11 +1560,6 @@ In this step, you need to perform the following operations:
             cluster: ${cluster_name}
             clusterNamespace: ${namespace}
             sendCredToTikv: true
-          from:
-            host: ${host}
-            secretName: ${tidb_secret}
-            port: 4000
-            user: root
           s3:
             provider: aws
             region: ${my_region}
@@ -1595,11 +1590,6 @@ In this step, you need to perform the following operations:
             cluster: ${cluster_name}
             clusterNamespace: ${namespace}
             sendCredToTikv: true
-          to:
-            host: ${host}
-            secretName: ${tidb_secret}
-            port: 4000
-            user: root
           s3:
             provider: aws
             region: ${my_region}
