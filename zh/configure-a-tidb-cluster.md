@@ -25,7 +25,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/configure-a-tidb-cluster/','/zh/tidb-
 
 ## 部署配置
 
-通过配置 `TidbCluster` CR 来配置 TiDB 集群。参考 TidbCluster [示例](https://github.com/pingcap/tidb-operator/blob/v1.6.1/examples/advanced/tidb-cluster.yaml)和 [API 文档](https://github.com/pingcap/tidb-operator/blob/v1.6.1/docs/api-references/docs.md)（示例和 API 文档请切换到当前使用的 TiDB Operator 版本）完成 TidbCluster CR(Custom Resource)。
+通过配置 `TidbCluster` CR 来配置 TiDB 集群。参考 TidbCluster [示例](<https://github.com/pingcap/tidb-operator/blob/{{{ .tidb_operator_version }}}/examples/advanced/tidb-cluster.yaml>)和 [API 文档](<https://github.com/pingcap/tidb-operator/blob/{{{ .tidb_operator_version }}}/docs/api-references/docs.md>)（示例和 API 文档请切换到当前使用的 TiDB Operator 版本）完成 TidbCluster CR(Custom Resource)。
 
 > **注意：**
 >
@@ -41,9 +41,9 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/configure-a-tidb-cluster/','/zh/tidb-
 
 相关参数的格式如下：
 
-- `spec.version`，格式为 `imageTag`，例如 `v8.5.0`
+- `spec.version`，格式为 `imageTag`，例如 `{{{ .tidb_version }}}`
 - `spec.<pd/tidb/tikv/pump/tiflash/ticdc>.baseImage`，格式为 `imageName`，例如 `pingcap/tidb`
-- `spec.<pd/tidb/tikv/pump/tiflash/ticdc>.version`，格式为 `imageTag`，例如 `v8.5.0`
+- `spec.<pd/tidb/tikv/pump/tiflash/ticdc>.version`，格式为 `imageTag`，例如 `{{{ .tidb_version }}}`
 
 ### 推荐配置
 
@@ -402,13 +402,18 @@ spec:
       [storage]
         [storage.block-cache]
           capacity = "16GB"
+      [log.file]
+        max-days = 30
+        max-backups = 30
 ```
 
 获取所有可以配置的 TiKV 配置参数，请参考 [TiKV 配置文档](https://docs.pingcap.com/zh/tidb/stable/tikv-configuration-file)
 
 > **注意：**
 >
-> 为了兼容 `helm` 部署，如果你是通过 CR 文件部署 TiDB 集群，即使你不设置 Config 配置，也需要保证 `Config: {}` 的设置，从而避免 TiKV 组件无法正常启动。
+> - 为了兼容 `helm` 部署，如果你是通过 CR 文件部署 TiDB 集群，即使你不设置 Config 配置，也需要保证 `Config: {}` 的设置，从而避免 TiKV 组件无法正常启动。
+> - TiKV 的 RocksDB 日志默认存储在 `/var/lib/tikv` 数据目录，建议配置 `max-days` 和 `max-backups` 来自动清理日志文件。
+> - 你也可通过配置 `separateRocksDBLog` 将 RocksDB 日志通过单独的 sidecar 容器输出到 stdout。完整配置项请参考 [TiDB Cluster 示例](https://github.com/pingcap/tidb-operator/blob/master/examples/advanced/tidb-cluster.yaml)。
 
 #### 配置 PD 配置参数
 
@@ -477,7 +482,7 @@ spec:
       level = "info"
 ```
 
-获取所有可以配置的 TiProxy 配置参数，请参考 [TiProxy 配置文档](https://docs.pingcap.com/zh/tidb/v7.6/tiproxy-configuration)。
+获取所有可以配置的 TiProxy 配置参数，请参考 [TiProxy 配置文档](https://docs.pingcap.com/zh/tidb/stable/tiproxy-configuration)。
 
 #### 配置 TiFlash 配置参数
 

@@ -1385,7 +1385,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
     spec:
      tlsCluster:
        enabled: true
-     version: v8.5.0
+     version: {{{ .tidb_version }}}
      timezone: UTC
      pvReclaimPolicy: Retain
      pd:
@@ -1444,7 +1444,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
        version: 7.5.11
      initializer:
        baseImage: pingcap/tidb-monitor-initializer
-       version: v8.5.0
+       version: {{{ .tidb_version }}}
      reloader:
        baseImage: pingcap/tidb-monitor-reloader
        version: v1.0.1
@@ -1731,4 +1731,5 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
         ```
 
 5. 如果之前进行了 PD 节点缩容，请将其扩容为原有数量。
+
 6. 等待 TiDB 集群中的所有 Pod 完成重启。

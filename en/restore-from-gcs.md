@@ -1,10 +1,14 @@
 ---
-title: Restore Data from GCS
+title: Restore Data from GCS (Helm)
 summary: Learn how to restore the backup data from GCS.
 aliases: ['/docs/tidb-in-kubernetes/dev/restore-from-gcs/']
 ---
 
-# Restore Data from GCS
+# Restore Data from GCS (Helm)
+
+> **Warning:**
+>
+> The Helm deployment method described in this document is deprecated. It is recommended to use the [Job method](restore-from-gcs-using-job.md) for data restore operations.
 
 This document describes how to restore the TiDB cluster data backed up using TiDB Operator on Kubernetes.
 
@@ -28,7 +32,7 @@ Before you perform the data restore, you need to prepare the restore environment
 
 ### Prepare the restore environment
 
-1. Download [`backup-rbac.yaml`](https://github.com/pingcap/tidb-operator/blob/v1.6.1/manifests/backup/backup-rbac.yaml) and execute the following command to create the role-based access control (RBAC) resources in the `test2` namespace:
+1. Download [`backup-rbac.yaml`](<https://github.com/pingcap/tidb-operator/blob/{{{ .tidb_operator_version }}}/manifests/backup/backup-rbac.yaml>) and execute the following command to create the role-based access control (RBAC) resources in the `test2` namespace:
 
     {{< copyable "shell-regular" >}}
 

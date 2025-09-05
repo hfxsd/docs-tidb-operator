@@ -49,7 +49,7 @@ Ad-hoc 备份支持快照备份，也支持[启动](#启动日志备份)和[停�
     kubectl create namespace backup-test
     ```
 
-2. 下载文件 [backup-rbac.yaml](https://github.com/pingcap/tidb-operator/blob/v1.6.1/manifests/backup/backup-rbac.yaml)，并执行以下命令在 `backup-test` 这个 namespace 中创建备份需要的 RBAC 相关资源：
+2. 下载文件 [backup-rbac.yaml](<https://github.com/pingcap/tidb-operator/blob/{{{ .tidb_operator_version }}}/manifests/backup/backup-rbac.yaml>)，并执行以下命令在 `backup-test` 这个 namespace 中创建备份需要的 RBAC 相关资源：
 
     {{< copyable "shell-regular" >}}
 
@@ -449,6 +449,64 @@ demo1-log-backup-gcs       log      Stopped   ....
     demo1-log-backup-gcs    log        Stopped    ...   2022-10-10T15:21:00+08:00
     ```
 
+### 压缩日志备份
+
+对于 TiDB v9.0.0 及以上版本的集群，你可以使用 `CompactBackup` CR 将日志备份数据压缩为 SST 格式，以加速下游的日志恢复 (Point-in-time recovery, PITR)。 
+
+本节基于前文的日志备份示例，介绍如何使用压缩日志备份。
+
+1. 在 `backup-test` namespace 中创建一个名为 `demo1-compact-backup` 的 CompactBackup CR。
+
+    ```shell
+    kubectl apply -f compact-backup-demo1.yaml
+    ```
+
+    `compact-backup-demo1.yaml` 的内容如下：
+  
+    ```yaml
+    ---
+    apiVersion: pingcap.com/v1alpha1
+    kind: CompactBackup
+    metadata:
+      name: demo1-compact-backup
+      namespace: backup-test
+    spec:
+      startTs: "***"
+      endTs: "***"
+      concurrency: 8
+      maxRetryTimes: 2
+      br:
+        cluster: demo1
+        clusterNamespace: test1
+        sendCredToTikv: true
+      gcs:
+        projectId: ${project_id}
+        secretName: gcs-secret
+        bucket: my-bucket
+        prefix: my-log-backup-folder
+    ```
+
+    其中，`startTs` 和 `endTs` 指定 `demo1-compact-backup` 需要压缩的日志备份时间范围。任何包含至少一个该时间区间内写入的日志都会被送去压缩。因此，最终的压缩结果可能包含该时间范围之外的写入数据。
+
+    `gcs` 设置应与需要压缩的日志备份的存储设置相同，`CompactBackup` 会读取相应地址的日志文件并进行压缩。
+
+#### 查看压缩日志备份状态
+
+创建 `CompactBackup` CR 后，TiDB Operator 会自动开始压缩日志备份。你可以运行以下命令查看备份状态：
+
+```shell
+kubectl get cpbk -n backup-test
+```
+
+从上述命令的输出中，你可以找到描述名为 `demo1-compact-backup` 的 `CompactBackup` CR 的信息，输出示例如下：
+
+```
+NAME                   STATUS                   PROGRESS                                     MESSAGE
+demo1-compact-backup   Complete   [READ_META(17/17),COMPACT_WORK(1291/1291)]   
+```
+
+如果 `STATUS` 字段显示为 `Complete` 则代表压缩日志备份已经完成。
+
 ### 备份示例
 
 <details>
@@ -734,6 +792,90 @@ spec:
     NAME                                                       MODE       STATUS    ....
     integrated-backup-schedule-gcs-2023-03-08t02-50-00         snapshot   Complete  ....  
     log-integrated-backup-schedule-gcs                         log        Running   ....
+    ```
+
+## 集成定时快照备份、日志备份和压缩日志备份
+
+为了加快下游恢复速度，可以在 `BackupSchedule` CR 中添加压缩日志备份。压缩日志备份可以定期压缩远程存储中的日志备份文件。你必须先启用日志备份，才能使用压缩日志备份。本节基于上一节内容进行扩展。
+
+### 前置条件：准备定时快照备份环境
+
+同[准备 Ad-hoc 备份环境](#前置条件准备-ad-hoc-备份环境)。
+
+### 创建 `BackupSchedule`
+
+1. 在 `backup-test` 这个 namespace 中创建一个名为 `integrated-backup-schedule-gcs` 的 `BackupSchedule` CR。
+
+    ```shell
+    kubectl apply -f integrated-backup-scheduler-gcs.yaml
+    ```
+
+    `integrated-backup-scheduler-gcs` 文件内容如下：
+
+    ```yaml
+    ---
+    apiVersion: pingcap.com/v1alpha1
+    kind: BackupSchedule
+    metadata:
+      name: integrated-backup-schedule-gcs
+      namespace: backup-test
+    spec:
+      maxReservedTime: "3h"
+      schedule: "* */2 * * *"
+      compactInterval: "1h"
+      backupTemplate:
+        backupType: full
+        cleanPolicy: Delete
+        br:
+          cluster: demo1
+          clusterNamespace: test1
+          sendCredToTikv: true
+        gcs:
+          projectId: ${project_id}
+          secretName: gcs-secret
+          bucket: my-bucket
+          prefix: schedule-backup-folder-snapshot
+      logBackupTemplate:
+        backupMode: log
+        br:
+          cluster: demo1
+          clusterNamespace: test1
+          sendCredToTikv: true
+        gcs:
+          projectId: ${project_id}
+          secretName: gcs-secret
+          bucket: my-bucket
+          prefix: schedule-backup-folder-log
+      compactBackupTemplate:
+        br:
+          cluster: demo1
+          clusterNamespace: test1
+          sendCredToTikv: true
+        gcs:
+          projectId: ${project_id}
+          secretName: gcs-secret
+          bucket: my-bucket
+          prefix: schedule-backup-folder-log
+    ```
+
+    以上 `integrated-backup-schedule-gcs.yaml` 文件配置示例中，`backupSchedule` 配置基于上一节内容，新增了 `compactBackup` 相关设置，主要改动如下：
+    
+    - 新增 `BackupSchedule.spec.compactInterval` 字段，用于指定日志压缩备份的时间间隔。建议不要超过定时快照备份的间隔，并控制在定时快照备份间隔的二分之一至三分之一之间。
+    
+    - 新增 `BackupSchedule.spec.compactBackupTemplate` 字段。请确保 `BackupSchedule.spec.compactBackupTemplate.gcs` 配置与 `BackupSchedule.spec.logBackupTemplate.gcs` 保持一致。
+
+    关于 `backupSchedule` 配置项具体介绍，请参考 [BackupSchedule CR 字段介绍](backup-restore-cr.md#backupschedule-cr-字段介绍)。
+
+2. `backupSchedule` 创建完成后，可以通过以下命令查看定时快照备份的状态：
+
+    ```shell
+    kubectl get bks -n backup-test -o wide
+    ```
+
+    压缩日志备份会随着 `backupSchedule` 创建，可以通过如下命令查看 `CompactBackup` CR 的信息。
+
+    ```shell
+    kubectl get cpbk -n backup-test
     ```
 
 ## 删除备份的 Backup CR

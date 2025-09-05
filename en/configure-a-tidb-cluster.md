@@ -24,7 +24,7 @@ If you are using a NUMA-based CPU, you need to enable `Static`'s CPU management 
 
 ## Configure TiDB deployment
 
-To configure a TiDB deployment, you need to configure the `TiDBCluster` CR. Refer to the [TidbCluster example](https://github.com/pingcap/tidb-operator/blob/v1.6.1/examples/advanced/tidb-cluster.yaml) for an example. For the complete configurations of `TiDBCluster` CR, refer to [API documentation](https://github.com/pingcap/tidb-operator/blob/v1.6.1/docs/api-references/docs.md).
+To configure a TiDB deployment, you need to configure the `TiDBCluster` CR. Refer to the [TidbCluster example](<https://github.com/pingcap/tidb-operator/blob/{{{ .tidb_operator_version }}}/examples/advanced/tidb-cluster.yaml>) for an example. For the complete configurations of `TiDBCluster` CR, refer to [API documentation](<https://github.com/pingcap/tidb-operator/blob/{{{ .tidb_operator_version }}}/docs/api-references/docs.md>).
 
 > **Note:**
 >
@@ -41,11 +41,11 @@ Usually, components in a cluster are in the same version. It is recommended to c
 
 Here are the formats of the parameters:
 
-- `spec.version`: the format is `imageTag`, such as `v8.5.0`
+- `spec.version`: the format is `imageTag`, such as `{{{ .tidb_version }}}`
 
 - `spec.<pd/tidb/tikv/pump/tiflash/ticdc>.baseImage`: the format is `imageName`, such as `pingcap/tidb`
 
-- `spec.<pd/tidb/tikv/pump/tiflash/ticdc>.version`: the format is `imageTag`, such as `v8.5.0`
+- `spec.<pd/tidb/tikv/pump/tiflash/ticdc>.version`: the format is `imageTag`, such as `{{{ .tidb_version }}}`
 
 ### Recommended configuration
 
@@ -69,7 +69,7 @@ It is recommended that you configure `spec.pvReclaimPolicy: Retain` to ensure th
 
 #### mountClusterClientSecret
 
-PD and TiKV supports configuring `mountClusterClientSecret`. If [TLS is enabled between cluster components](enable-tls-between-components.md), it is recommended to configure `spec.pd.mountClusterClientSecret: true` and `spec.tikv.mountClusterClientSecret: true`. Under such configuration, TiDB Operator automatically mounts the `${cluster_name}-cluster-client-secret` certificate to the PD and TiKV container, so you can conveniently [use `pd-ctl` and `tikv-ctl`](enable-tls-between-components.md#configure-pd-ctl-tikv-ctl-and-connect-to-the-cluster).
+PD and TiKV supports configuring `mountClusterClientSecret`. If [TLS is enabled between cluster components](enable-tls-between-components.md), it is recommended to configure `spec.pd.mountClusterClientSecret: true` and `spec.tikv.mountClusterClientSecret: true`. Under such configuration, TiDB Operator automatically mounts the `${cluster_name}-cluster-client-secret` certificate to the PD and TiKV container, so you can conveniently [use `pd-ctl` and `tikv-ctl`](enable-tls-between-components.md#step-3-configure-pd-ctl-tikv-ctl-and-connect-to-the-cluster).
 
 #### startScriptVersion
 
@@ -408,13 +408,18 @@ spec:
       [storage]
         [storage.block-cache]
           capacity = "16GB"
+      [log.file]
+        max-days = 30
+        max-backups = 30
 ```
 
 For all the configurable parameters of TiKV, refer to [TiKV Configuration File](https://docs.pingcap.com/tidb/stable/tikv-configuration-file).
 
 > **Note:**
 >
-> If you deploy your TiDB cluster using CR, make sure that `Config: {}` is set, no matter you want to modify `config` or not. Otherwise, TiKV components might not be started successfully. This step is meant to be compatible with `Helm` deployment.
+> - If you deploy your TiDB cluster using CR, make sure that `Config: {}` is set, no matter you want to modify `config` or not. Otherwise, TiKV components might not be started successfully. This step is meant to be compatible with `Helm` deployment.
+> - TiKV RocksDB logs are stored in the `/var/lib/tikv` data directory by default. It is recommended that you configure `max-days` and `max-backups` to automatically clean log files.
+> - You can also use the `separateRocksDBLog` configuration item to configure TiKV to output RocksDB logs to stdout through a sidecar container. For more information, see the [TiDB Cluster example](https://github.com/pingcap/tidb-operator/blob/master/examples/advanced/tidb-cluster.yaml).
 
 #### Configure PD parameters
 
@@ -487,7 +492,7 @@ spec:
       level = "info"
 ```
 
-For all the configurable parameters of TiProxy, refer to [TiProxy Configuration File](https://docs.pingcap.com/tidb/v7.6/tiproxy-configuration).
+For all the configurable parameters of TiProxy, refer to [TiProxy Configuration File](https://docs.pingcap.com/tidb/stable/tiproxy-configuration).
 
 #### Configure TiFlash parameters
 

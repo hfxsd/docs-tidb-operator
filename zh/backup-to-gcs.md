@@ -1,10 +1,14 @@
 ---
-title: 使用 Dumpling 备份 TiDB 集群数据到 GCS
-summary: 介绍如何使用 Dumpling 将 TiDB 集群数据备份到 Google Cloud Storage (GCS)。
+title: 使用 Dumpling 备份 TiDB 集群数据到 GCS (Helm)
+summary: 介绍如何使用 Helm 部署 Dumpling 将 TiDB 集群数据备份到 Google Cloud Storage (GCS)。
 aliases: ['/docs-cn/tidb-in-kubernetes/dev/backup-to-gcs/']
 ---
 
-# 使用 Dumpling 备份 TiDB 集群数据到 GCS
+# 使用 Dumpling 备份 TiDB 集群数据到 GCS (Helm)
+
+> **警告：**
+>
+> 本文介绍的 Helm 部署方式已弃用，建议使用 [Job 方式](backup-to-gcs-using-job.md)进行备份操作。
 
 本文档介绍如何将 Kubernetes 上 TiDB 集群的数据备份到 [Google Cloud Storage (GCS)](https://cloud.google.com/storage/docs/) 上。本文档中的“备份”，均是指全量备份（即 Ad-hoc 全量备份和定时全量备份）。
 
@@ -38,7 +42,7 @@ Ad-hoc 全量备份通过创建一个自定义的 `Backup` custom resource (CR) 
 
 ### 第 1 步：Ad-hoc 全量备份环境准备
 
-1. 下载文件 [backup-rbac.yaml](https://github.com/pingcap/tidb-operator/blob/v1.6.1/manifests/backup/backup-rbac.yaml)，并执行以下命令在 `test1` 这个 namespace 中创建备份需要的 RBAC 相关资源：
+1. 下载文件 [backup-rbac.yaml](<https://github.com/pingcap/tidb-operator/blob/{{{ .tidb_operator_version }}}/manifests/backup/backup-rbac.yaml>)，并执行以下命令在 `test1` 这个 namespace 中创建备份需要的 RBAC 相关资源：
 
     {{< copyable "shell-regular" >}}
 
