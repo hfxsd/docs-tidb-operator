@@ -1158,6 +1158,68 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
 
         创建这个对象以后，`cert-manager` 会生成一个名字为 `${cluster_name}-ticdc-cluster-secret` 的 Secret 对象供 TiDB 集群的 TiCDC 组件使用。
 
+    - TiProxy 组件的 Server 端证书。
+
+        ```yaml
+        apiVersion: cert-manager.io/v1
+        kind: Certificate
+        metadata:
+          name: ${cluster_name}-tiproxy-cluster-secret
+          namespace: ${namespace}
+        spec:
+          secretName: ${cluster_name}-tiproxy-cluster-secret
+          duration: 8760h # 365d
+          renewBefore: 360h # 15d
+          subject:
+            organizations:
+            - PingCAP
+          commonName: "TiDB"
+          usages:
+            - server auth
+            - client auth
+          dnsNames:
+          - "${cluster_name}-tiproxy"
+          - "${cluster_name}-tiproxy.${namespace}"
+          - "${cluster_name}-tiproxy.${namespace}.svc"
+          - "${cluster_name}-tiproxy-peer"
+          - "${cluster_name}-tiproxy-peer.${namespace}"
+          - "${cluster_name}-tiproxy-peer.${namespace}.svc"
+          - "*.${cluster_name}-tiproxy-peer"
+          - "*.${cluster_name}-tiproxy-peer.${namespace}"
+          - "*.${cluster_name}-tiproxy-peer.${namespace}.svc"
+          ipAddresses:
+          - 127.0.0.1
+          - ::1
+          issuerRef:
+            name: ${cluster_name}-tidb-issuer
+            kind: Issuer
+            group: cert-manager.io
+        ```
+
+        其中 `${cluster_name}` 为集群的名字：
+
+        - `spec.secretName` 请设置为 `${cluster_name}-tiproxy-cluster-secret`；
+        - `usages` 请添加上 `server auth` 和 `client auth`；
+        - `dnsNames` 需要填写这些 DNS，根据需要可以填写其他 DNS：
+
+            - `${cluster_name}-tiproxy`
+            - `${cluster_name}-tiproxy.${namespace}`
+            - `${cluster_name}-tiproxy.${namespace}.svc`
+            - `${cluster_name}-tiproxy-peer`
+            - `${cluster_name}-tiproxy-peer.${namespace}`
+            - `${cluster_name}-tiproxy-peer.${namespace}.svc`
+            - `*.${cluster_name}-tiproxy-peer`
+            - `*.${cluster_name}-tiproxy-peer.${namespace}`
+            - `*.${cluster_name}-tiproxy-peer.${namespace}.svc`
+        
+        - `ipAddresses` 需要填写这两个 IP，根据需要可以填写其他 IP：
+            - `127.0.0.1`
+            - `::1`
+        - `issuerRef` 请填写上面创建的 Issuer；
+        - 其他属性请参考 [cert-manager API](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec)。
+
+      创建这个对象以后，`cert-manager` 会生成一个名字为 `${cluster_name}-tiproxy-cluster-secret` 的 Secret 对象供 TiDB 集群的 TiProxy 组件使用。
+
     - TiFlash 组件的 Server 端证书。
 
         ```yaml
@@ -1617,7 +1679,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
     {{< copyable "shell-regular" >}}
 
     ``` shell
-    kubectl exec -it ${cluster_name}-pd-0 -n ${namespace} sh
+    kubectl exec -it ${cluster_name}-pd-0 -n ${namespace} -- sh
     ```
 
     使用 `pd-ctl`：
@@ -1636,7 +1698,7 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
     {{< copyable "shell-regular" >}}
 
     ``` shell
-    kubectl exec -it ${cluster_name}-tikv-0 -n ${namespace} sh
+    kubectl exec -it ${cluster_name}-tikv-0 -n ${namespace} -- sh
     ```
 
     使用 `tikv-ctl`：
@@ -1733,3 +1795,10 @@ aliases: ['/docs-cn/tidb-in-kubernetes/dev/enable-tls-between-components/']
 5. 如果之前进行了 PD 节点缩容，请将其扩容为原有数量。
 
 6. 等待 TiDB 集群中的所有 Pod 完成重启。
+
+## 重新加载证书
+
+- 如果你使用 `cfssl` 手动生成证书和密钥文件，则必须手动更新相应的 Secret。
+- 如果你使用 `cert-manager` 生成证书和密钥文件，那么每次颁发新证书时，Secret 会自动更新。
+
+TiDB、PD、TiKV、TiFlash、TiCDC、TiProxy 以及客户端组件会在每次建立新连接时自动重新加载当前的证书和密钥文件，因此无需重启 TiDB 集群。一旦 Secret 更新，证书和密钥会自动生效。

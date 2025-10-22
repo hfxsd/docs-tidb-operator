@@ -1167,6 +1167,68 @@ This section describes how to issue certificates using two methods: `cfssl` and 
 
         After the object is created, `cert-manager` generates a `${cluster_name}-ticdc-cluster-secret` Secret object to be used by the TiCDC component of the TiDB server.
 
+    - TiProxy
+
+        ```yaml
+        apiVersion: cert-manager.io/v1
+        kind: Certificate
+        metadata:
+          name: ${cluster_name}-tiproxy-cluster-secret
+          namespace: ${namespace}
+        spec:
+          secretName: ${cluster_name}-tiproxy-cluster-secret
+          duration: 8760h # 365d
+          renewBefore: 360h # 15d
+          subject:
+            organizations:
+            - PingCAP
+          commonName: "TiDB"
+          usages:
+            - server auth
+            - client auth
+          dnsNames:
+          - "${cluster_name}-tiproxy"
+          - "${cluster_name}-tiproxy.${namespace}"
+          - "${cluster_name}-tiproxy.${namespace}.svc"
+          - "${cluster_name}-tiproxy-peer"
+          - "${cluster_name}-tiproxy-peer.${namespace}"
+          - "${cluster_name}-tiproxy-peer.${namespace}.svc"
+          - "*.${cluster_name}-tiproxy-peer"
+          - "*.${cluster_name}-tiproxy-peer.${namespace}"
+          - "*.${cluster_name}-tiproxy-peer.${namespace}.svc"
+          ipAddresses:
+          - 127.0.0.1
+          - ::1
+          issuerRef:
+            name: ${cluster_name}-tidb-issuer
+            kind: Issuer
+            group: cert-manager.io
+        ```
+
+        `${cluster_name}` is the name of the cluster. Configure the items as follows:
+
+        - Set `spec.secretName` to `${cluster_name}-tiproxy-cluster-secret`.
+        - Add `server auth` and `client auth` in `usages`.
+        - Add the following DNSs in `dnsNames`. You can also add other DNSs according to your needs:
+
+            - `${cluster_name}-tiproxy`
+            - `${cluster_name}-tiproxy.${namespace}`
+            - `${cluster_name}-tiproxy.${namespace}.svc`
+            - `${cluster_name}-tiproxy-peer`
+            - `${cluster_name}-tiproxy-peer.${namespace}`
+            - `${cluster_name}-tiproxy-peer.${namespace}.svc`
+            - `*.${cluster_name}-tiproxy-peer`
+            - `*.${cluster_name}-tiproxy-peer.${namespace}`
+            - `*.${cluster_name}-tiproxy-peer.${namespace}.svc`
+
+        - Add the following 2 IPs in `ipAddresses`. You can also add other IPs according to your needs:
+            - `127.0.0.1`
+            - `::1`        
+        - Add the Issuer created above in `issuerRef`.
+        - For other attributes, refer to [cert-manager API](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec).
+
+      After the object is created, `cert-manager` generates a `${cluster_name}-tiproxy-cluster-secret` Secret object to be used by the TiProxy component of the TiDB server.
+
     - TiFlash
 
         ```yaml
@@ -1631,7 +1693,7 @@ In this step, you need to perform the following operations:
     {{< copyable "shell-regular" >}}
 
     ``` shell
-    kubectl exec -it ${cluster_name}-pd-0 -n ${namespace} sh
+    kubectl exec -it ${cluster_name}-pd-0 -n ${namespace} -- sh
     ```
 
     Use `pd-ctl`:
@@ -1650,7 +1712,7 @@ In this step, you need to perform the following operations:
     {{< copyable "shell-regular" >}}
 
     ``` shell
-    kubectl exec -it ${cluster_name}-tikv-0 -n ${namespace} sh
+    kubectl exec -it ${cluster_name}-tikv-0 -n ${namespace} -- sh
     ```
 
     Use `tikv-ctl`:
@@ -1747,3 +1809,10 @@ This section describes how to enable TLS encrypted communication for an existing
 5. If you previously scaled down the PD nodes, scale them back up to the original number.
 
 6. Wait for all Pods in the TiDB cluster to restart.
+
+## Reload certificates
+
+- If you generate the certificate and key files manually using `cfssl`, you must update the corresponding Secret manually.
+- If you generate the certificate and key files using `cert-manager`, the Secret is updated automatically whenever a new certificate is issued.
+
+TiDB, PD, TiKV, TiFlash, TiCDC, TiProxy, and client components automatically reload the current certificates and key files for every new connection. This means the TiDB cluster does not require a restart. Once the Secret is updated, the certificates and keys are reloaded automatically.
